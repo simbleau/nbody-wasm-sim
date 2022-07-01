@@ -1,0 +1,35 @@
+[package]
+name = "nbody-wasm-sim"
+authors = ["Spencer C. Imbleau <spencer@imbleau.com>", "Sebastian Hamel"]
+version = "0.1.0"
+edition = "2021"
+
+[profile.release]
+# less code to include into binary
+panic = 'abort'
+# optimization over all codebase ( better optimization, slower build )
+codegen-units = 1
+# optimization for size (aggressive)
+opt-level = 'z'
+# optimization for size
+#opt-level = 's'
+# link time optimization using using whole-program analysis
+lto = true
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+wasm-bindgen = "0.2.81"
+winit = "0.26.1"
+gloo-console = "0.2.1"
+
+[dependencies.web-sys]
+web-sys = "0.3.58"
+features = [
+    'Document',
+    'Element',
+    'HtmlElement',
+    'Node',
+    'Window',
+]
