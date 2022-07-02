@@ -1,8 +1,11 @@
 mod canvas;
 mod fps_counter;
 mod log_list;
+mod state;
 
+use gloo_console::log;
 use instant::Instant;
+use state::State;
 use wasm_bindgen::prelude::*;
 use winit::dpi::PhysicalSize;
 use winit::platform::web::WindowBuilderExtWebSys;
@@ -30,6 +33,10 @@ pub async fn run() {
             Ok(w)
         })
         .expect("Could not build window");
+
+    // Connect graphics card to window
+    let mut _state = State::new(&window).await;
+    log!("We connected the graphics card to the surface");
 
     // Run program
     let mut dt_filtered = 0.0;
