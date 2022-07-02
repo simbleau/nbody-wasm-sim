@@ -10,8 +10,8 @@ use winit::{event::Event, event_loop::EventLoop, window::WindowBuilder};
 
 const FPS_FILTER_PERIOD: f32 = 10.0;
 
-#[wasm_bindgen]
-pub fn attach() {
+#[wasm_bindgen(start)]
+pub async fn run() {
     // Redirect panics to the console (debugging)
     console_error_panic_hook::set_once();
 

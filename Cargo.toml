@@ -22,6 +22,7 @@ crate-type = ["cdylib"]
 [dependencies]
 console_error_panic_hook = "0.1.7"
 wasm-bindgen = "0.2.81"
+wasm-bindgen-futures = "0.4.31"
 winit = "0.26.1"
 gloo-console = "0.2.1"
 instant = "0.1.12"
