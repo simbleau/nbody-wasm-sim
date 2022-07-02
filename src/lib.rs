@@ -8,6 +8,7 @@ use instant::Instant;
 use state::State;
 use wasm_bindgen::prelude::*;
 use winit::dpi::PhysicalSize;
+use winit::event::WindowEvent;
 use winit::platform::web::WindowBuilderExtWebSys;
 use winit::{event::Event, event_loop::EventLoop, window::WindowBuilder};
 
@@ -35,7 +36,7 @@ pub async fn run() {
         .expect("Could not build window");
 
     // Connect graphics card to window
-    let mut _state = State::new(&window).await;
+    let mut state = State::new(&window).await;
     log!("We connected the graphics card to the surface");
 
     // Run program
@@ -45,6 +46,28 @@ pub async fn run() {
         log_list::log_event(&log_list, &event);
 
         match event {
+            Event::WindowEvent {
+                window_id: id,
+                event: winevent,
+            } if id == window.id() => {
+                if !state.input(&winevent) {
+                    match winevent {
+                        WindowEvent::Resized(physical_size) => {
+                            state.resize(physical_size);
+                        }
+                        WindowEvent::ScaleFactorChanged {
+                            new_inner_size,
+                            ..
+                        } => {
+                            // new_inner_size is &&mut so we have to dereference
+                            // it twice
+                            state.resize(*new_inner_size);
+                        }
+                        _ => (),
+                    }
+                }
+            }
+
             Event::MainEventsCleared => {
                 window.request_redraw();
             }
