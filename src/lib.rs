@@ -24,9 +24,12 @@ pub async fn run() {
     let window = WindowBuilder::new()
         .with_canvas(Some(canvas))
         .build(&event_loop)
-        .unwrap();
-    // Resize window (the canvas)
-    window.set_inner_size(PhysicalSize::new(600.0, 400.0));
+        .and_then(|w| {
+            // Set attributes
+            w.set_inner_size(PhysicalSize::new(600.0, 400.0));
+            Ok(w)
+        })
+        .expect("Could not build window");
 
     // Run program
     let mut dt_filtered = 0.0;
