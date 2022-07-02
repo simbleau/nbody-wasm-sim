@@ -71,13 +71,14 @@ impl State {
         }
     }
 
+    /// Returns a bool to indicate whether an event has been fully processed
     pub fn input(&mut self, _event: &WindowEvent) -> bool {
         // We have no events to handle currently
         false
     }
 
     pub fn update(&mut self) {
-        todo!()
+        // We have nothing to update currently
     }
 
     pub fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
