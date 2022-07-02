@@ -12,6 +12,7 @@ pub fn attach() {
     log!("Test");
     let canvas = canvas::get_canvas();
     canvas::style_canvas(&canvas);
+    let log_list = log_list::get_log_list();
 
     // Create window
     let event_loop = EventLoop::new();
@@ -20,11 +21,8 @@ pub fn attach() {
         .build(&event_loop)
         .unwrap();
 
-    // Set canvas to 400x200
-    // window.set_inner_size(PhysicalSize::new(400.0, 600.0));
-
-    // Create log list
-    let log_list = log_list::create_log_list();
+    // Resize canvas
+    window.set_inner_size(PhysicalSize::new(600.0, 400.0));
 
     // Run program
     event_loop.run(move |event, _, _control_flow| {
