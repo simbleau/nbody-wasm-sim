@@ -67,7 +67,6 @@ pub async fn run() {
                     }
                 }
             }
-
             Event::MainEventsCleared => {
                 window.request_redraw();
             }
