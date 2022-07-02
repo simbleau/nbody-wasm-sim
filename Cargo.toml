@@ -32,4 +32,5 @@ features = [
     'HtmlElement',
     'Node',
     'Window',
+    'HtmlCanvasElement'
 ]
