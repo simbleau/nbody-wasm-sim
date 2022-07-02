@@ -23,6 +23,7 @@ crate-type = ["cdylib"]
 wasm-bindgen = "0.2.81"
 winit = "0.26.1"
 gloo-console = "0.2.1"
+instant = "0.1.12"
 
 [dependencies.web-sys]
 web-sys = "0.3.58"
