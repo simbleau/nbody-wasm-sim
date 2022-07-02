@@ -20,6 +20,7 @@ lto = true
 crate-type = ["cdylib"]
 
 [dependencies]
+console_error_panic_hook = "0.1.7"
 wasm-bindgen = "0.2.81"
 winit = "0.26.1"
 gloo-console = "0.2.1"

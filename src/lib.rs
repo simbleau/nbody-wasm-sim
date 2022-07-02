@@ -12,6 +12,9 @@ const FPS_FILTER_PERIOD: f32 = 10.0;
 
 #[wasm_bindgen]
 pub fn attach() {
+    // Redirect panics to the console (debugging)
+    console_error_panic_hook::set_once();
+
     let canvas = canvas::get_canvas();
     let log_list = log_list::get_log_list();
     let fps_counter = fps_counter::get_fps_counter();
