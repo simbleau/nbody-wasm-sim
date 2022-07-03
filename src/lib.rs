@@ -1,26 +1,24 @@
 mod dom;
-mod state;
+mod runtime;
+mod wgpu_context;
 
 use gloo_console::log;
-use instant::Instant;
-use state::State;
 use wasm_bindgen::prelude::*;
+use wgpu_context::WgpuContext;
 use winit::dpi::PhysicalSize;
-use winit::event::WindowEvent;
-use winit::event_loop::ControlFlow;
 use winit::platform::web::WindowBuilderExtWebSys;
-use winit::{event::Event, event_loop::EventLoop, window::WindowBuilder};
+use winit::{event_loop::EventLoop, window::WindowBuilder};
 
-const FPS_FILTER_PERIOD: f32 = 10.0;
+use crate::dom::Dom;
+use crate::runtime::Runtime;
 
 #[wasm_bindgen(start)]
 pub async fn run() {
     // Redirect panics to the console (debugging)
     console_error_panic_hook::set_once();
 
+    let dom = Dom::new();
     let canvas = dom::get_canvas();
-    let log_list = dom::get_log_list();
-    let fps_counter = dom::get_fps_counter();
 
     // Create window
     let event_loop = EventLoop::new();
@@ -35,71 +33,12 @@ pub async fn run() {
         .expect("Could not build window");
 
     // Connect graphics card to window
-    let mut state = State::new(&window).await;
+    let context = WgpuContext::new(&window).await;
     log!("We connected the graphics card to the surface");
 
     // Run program
-    let mut dt_filtered = 0.0;
-    let mut last_frame_instant = Instant::now();
-    event_loop.run(move |event, _, control_flow| {
-        // Log every event
-        log_list.log_event(&event);
-
-        match event {
-            Event::WindowEvent {
-                window_id: id,
-                event: winevent,
-            } if id == window.id() => {
-                if !state.input(&winevent) {
-                    match winevent {
-                        WindowEvent::Resized(physical_size) => {
-                            state.resize(physical_size);
-                        }
-                        WindowEvent::ScaleFactorChanged {
-                            new_inner_size,
-                            ..
-                        } => {
-                            // new_inner_size is &&mut so we have to dereference
-                            // it twice
-                            state.resize(*new_inner_size);
-                        }
-                        _ => (),
-                    }
-                }
-            }
-            Event::MainEventsCleared => {
-                // RedrawRequested will only trigger once, unless we manually
-                // request it.
-                window.request_redraw();
-            }
-            Event::RedrawRequested(window_id) if window_id == window.id() => {
-                state.update();
-                match state.render() {
-                    Ok(_) => {
-                        let now = Instant::now();
-                        let dt_duration = now - last_frame_instant;
-                        last_frame_instant = now;
-
-                        let dt_raw = dt_duration.as_secs_f32();
-                        dt_filtered = dt_filtered
-                            + (dt_raw - dt_filtered) / FPS_FILTER_PERIOD;
-
-                        fps_counter.update((1.0 / dt_filtered) as i32);
-                    }
-                    // Reconfigure the surface if lost
-                    Err(wgpu::SurfaceError::Lost) => state.resize(state.size),
-                    // The system is out of memory, we should probably quit
-                    Err(wgpu::SurfaceError::OutOfMemory) => {
-                        log_list.log_message("Out of memory!");
-                        *control_flow = ControlFlow::Exit
-                    }
-                    Err(e) => {
-                        // Error!
-                        log_list.log_message(&format!("{:?}", e));
-                    }
-                }
-            }
-            _ => (),
-        }
+    let mut runtime = Runtime::new(context, window, dom);
+    event_loop.run(move |event, target, control_flow| {
+        runtime.main_loop(event, target, control_flow)
     });
 }

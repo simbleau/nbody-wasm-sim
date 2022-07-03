@@ -1,15 +1,15 @@
 use gloo_console::log;
 use winit::{event::WindowEvent, window::Window};
 
-pub struct State {
-    surface: wgpu::Surface,
-    device: wgpu::Device,
-    queue: wgpu::Queue,
-    config: wgpu::SurfaceConfiguration,
-    pub size: winit::dpi::PhysicalSize<u32>, // TODO : getters
+pub struct WgpuContext {
+    pub surface: wgpu::Surface,
+    pub device: wgpu::Device,
+    pub queue: wgpu::Queue,
+    pub config: wgpu::SurfaceConfiguration,
+    pub size: winit::dpi::PhysicalSize<u32>,
 }
 
-impl State {
+impl WgpuContext {
     // Creating some of the wgpu types requires async code
     pub async fn new(window: &Window) -> Self {
         let size = window.inner_size();
