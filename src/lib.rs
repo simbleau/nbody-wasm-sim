@@ -9,6 +9,7 @@ use state::State;
 use wasm_bindgen::prelude::*;
 use winit::dpi::PhysicalSize;
 use winit::event::WindowEvent;
+use winit::event_loop::ControlFlow;
 use winit::platform::web::WindowBuilderExtWebSys;
 use winit::{event::Event, event_loop::EventLoop, window::WindowBuilder};
 
@@ -42,7 +43,7 @@ pub async fn run() {
     // Run program
     let mut dt_filtered = 0.0;
     let mut last_frame_instant = Instant::now();
-    event_loop.run(move |event, _, _control_flow| {
+    event_loop.run(move |event, _, control_flow| {
         log_list::log_event(&log_list, &event);
 
         match event {
@@ -68,21 +69,38 @@ pub async fn run() {
                 }
             }
             Event::MainEventsCleared => {
+                // RedrawRequested will only trigger once, unless we manually
+                // request it.
                 window.request_redraw();
             }
-            Event::RedrawRequested(_) => {
-                let now = Instant::now();
-                let dt_duration = now - last_frame_instant;
-                last_frame_instant = now;
+            Event::RedrawRequested(window_id) if window_id == window.id() => {
+                state.update();
+                match state.render() {
+                    Ok(_) => {
+                        let now = Instant::now();
+                        let dt_duration = now - last_frame_instant;
+                        last_frame_instant = now;
 
-                let dt_raw = dt_duration.as_secs_f32();
-                dt_filtered =
-                    dt_filtered + (dt_raw - dt_filtered) / FPS_FILTER_PERIOD;
+                        let dt_raw = dt_duration.as_secs_f32();
+                        dt_filtered = dt_filtered
+                            + (dt_raw - dt_filtered) / FPS_FILTER_PERIOD;
 
-                fps_counter.set_text_content(Some(&format!(
-                    "FPS: {:?}",
-                    (1.0 / dt_filtered) as i32
-                )));
+                        fps_counter.set_text_content(Some(&format!(
+                            "FPS: {:?}",
+                            (1.0 / dt_filtered) as i32
+                        )));
+                    }
+                    // Reconfigure the surface if lost
+                    Err(wgpu::SurfaceError::Lost) => state.resize(state.size),
+                    // The system is out of memory, we should probably quit
+                    Err(wgpu::SurfaceError::OutOfMemory) => {
+                        // TODO: log this
+                        *control_flow = ControlFlow::Exit
+                    }
+                    // All other errors (Outdated, Timeout) should be resolved
+                    // by the next frame
+                    Err(e) => eprintln!("{:?}", e), // TODO: log this
+                }
             }
             _ => (),
         }
