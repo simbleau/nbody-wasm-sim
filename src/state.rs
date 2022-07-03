@@ -53,8 +53,7 @@ impl State {
             format: surface.get_supported_formats(&adapter)[0],
             width: size.width,
             height: size.height,
-            // AutoNoVSync is bugged: https://github.com/gfx-rs/wgpu/issues/2840
-            present_mode: wgpu::PresentMode::Fifo, // TODO: USE AutoNoVsync
+            present_mode: wgpu::PresentMode::AutoNoVsync,
         };
         surface.configure(&device, &config);
 
