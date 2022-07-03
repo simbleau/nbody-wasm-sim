@@ -50,7 +50,8 @@ impl State {
             format: surface.get_supported_formats(&adapter)[0],
             width: size.width,
             height: size.height,
-            present_mode: wgpu::PresentMode::AutoNoVsync, // Turn off VSync
+            // AutoNoVSync is bugged: https://github.com/gfx-rs/wgpu/issues/2840
+            present_mode: wgpu::PresentMode::Fifo, // TODO: USE AutoNoVsync
         };
         surface.configure(&device, &config);
 
@@ -88,8 +89,6 @@ impl State {
         let view = output
             .texture
             .create_view(&wgpu::TextureViewDescriptor::default());
-
-        log!("got here");
 
         // Encoder will send commands to the queue
         let mut encoder = self.device.create_command_encoder(
