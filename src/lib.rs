@@ -1,6 +1,4 @@
-mod canvas;
-mod fps_counter;
-mod log_list;
+mod dom;
 mod state;
 
 use gloo_console::log;
@@ -20,9 +18,9 @@ pub async fn run() {
     // Redirect panics to the console (debugging)
     console_error_panic_hook::set_once();
 
-    let canvas = canvas::get_canvas();
-    let log_list = log_list::get_log_list();
-    let fps_counter = fps_counter::get_fps_counter();
+    let canvas = dom::get_canvas();
+    let log_list = dom::get_log_list();
+    let fps_counter = dom::get_fps_counter();
 
     // Create window
     let event_loop = EventLoop::new();
@@ -44,7 +42,8 @@ pub async fn run() {
     let mut dt_filtered = 0.0;
     let mut last_frame_instant = Instant::now();
     event_loop.run(move |event, _, control_flow| {
-        log_list::log_event(&log_list, &event);
+        // Log every event
+        log_list.log_event(&event);
 
         match event {
             Event::WindowEvent {
@@ -85,21 +84,19 @@ pub async fn run() {
                         dt_filtered = dt_filtered
                             + (dt_raw - dt_filtered) / FPS_FILTER_PERIOD;
 
-                        fps_counter.set_text_content(Some(&format!(
-                            "FPS: {:?}",
-                            (1.0 / dt_filtered) as i32
-                        )));
+                        fps_counter.update((1.0 / dt_filtered) as i32);
                     }
                     // Reconfigure the surface if lost
                     Err(wgpu::SurfaceError::Lost) => state.resize(state.size),
                     // The system is out of memory, we should probably quit
                     Err(wgpu::SurfaceError::OutOfMemory) => {
-                        // TODO: log this
+                        log_list.log_message("Out of memory!");
                         *control_flow = ControlFlow::Exit
                     }
-                    // All other errors (Outdated, Timeout) should be resolved
-                    // by the next frame
-                    Err(e) => eprintln!("{:?}", e), // TODO: log this
+                    Err(e) => {
+                        // Error!
+                        log_list.log_message(&format!("{:?}", e));
+                    }
                 }
             }
             _ => (),
