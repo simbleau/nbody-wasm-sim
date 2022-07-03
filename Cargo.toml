@@ -27,6 +27,7 @@ winit = "0.26.1"
 gloo-console = "0.2.1"
 instant = "0.1.12"
 wgpu = { version = "0.13.1", features = ["webgl"] } # TODO: Years in the future when wgpu is stable, remove gl
+nalgebra = "0.31.0"
 
 [dependencies.web-sys]
 web-sys = "0.3.58"

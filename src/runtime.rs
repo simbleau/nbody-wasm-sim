@@ -4,12 +4,14 @@ use winit::event_loop::{ControlFlow, EventLoopWindowTarget};
 use winit::window::Window;
 
 use crate::dom::Dom;
+use crate::state::State;
 use crate::wgpu_context::WgpuContext;
 
 pub struct Runtime {
     context: WgpuContext,
     window: Window,
     dom: Dom,
+    state: State,
 }
 
 impl Runtime {
@@ -18,6 +20,7 @@ impl Runtime {
             context,
             window,
             dom,
+            state: State::default(),
         }
     }
 
@@ -36,6 +39,7 @@ impl Runtime {
                 event: winevent,
             } if id == self.window.id() => {
                 if !self.context.input(&winevent) {
+                    self.state.input(&winevent);
                     match winevent {
                         WindowEvent::Resized(physical_size) => {
                             self.context.resize(physical_size);
@@ -61,7 +65,7 @@ impl Runtime {
                 if window_id == self.window.id() =>
             {
                 self.context.update();
-                match self.context.render() {
+                match self.context.render(&self.state) {
                     Ok(_) => {
                         // Update frame count
                         self.dom.fps_counter.update();

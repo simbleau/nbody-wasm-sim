@@ -1,5 +1,7 @@
 mod dom;
+mod renderer;
 mod runtime;
+mod state;
 mod wgpu_context;
 
 use gloo_console::log;
@@ -34,7 +36,7 @@ pub async fn run() {
 
     // Connect graphics card to window
     let context = WgpuContext::new(&window).await;
-    log!("We connected the graphics card to the surface");
+    log!("Acquired graphics context");
 
     // Run program
     let mut runtime = Runtime::new(context, window, dom);

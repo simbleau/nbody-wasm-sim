@@ -1,6 +1,8 @@
 use gloo_console::log;
 use winit::{event::WindowEvent, window::Window};
 
+use crate::{renderer, state::State};
+
 pub struct WgpuContext {
     pub surface: wgpu::Surface,
     pub device: wgpu::Device,
@@ -13,6 +15,7 @@ impl WgpuContext {
     // Creating some of the wgpu types requires async code
     pub async fn new(window: &Window) -> Self {
         let size = window.inner_size();
+        log!("Surface size:", size.width, size.height);
 
         // The instance is a handle to our GPU
         // Backends::all => Vulkan + Metal + DX12 + Browser WebGPU
@@ -29,7 +32,7 @@ impl WgpuContext {
             .unwrap();
 
         let backend = format!("{:?}", adapter.get_info().backend);
-        log!("Backend: ", backend);
+        log!("Backend:", backend);
 
         // This is safe to do?
         std::mem::drop(instance);
@@ -85,7 +88,7 @@ impl WgpuContext {
         // We have nothing to update currently
     }
 
-    pub fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
+    pub fn render(&mut self, state: &State) -> Result<(), wgpu::SurfaceError> {
         // Get the surface texture we will draw on
         let output = self.surface.get_current_texture()?;
         let view = output
@@ -100,19 +103,11 @@ impl WgpuContext {
         );
 
         {
+            let attachments = renderer::get_attachments(state, &view);
             let _render_pass =
                 encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                     label: Some("Render Pass"),
-                    color_attachments: &[Some(
-                        wgpu::RenderPassColorAttachment {
-                            view: &view,
-                            resolve_target: None,
-                            ops: wgpu::Operations {
-                                load: wgpu::LoadOp::Clear(wgpu::Color::BLACK),
-                                store: true,
-                            },
-                        },
-                    )],
+                    color_attachments: &[attachments],
                     depth_stencil_attachment: None,
                 });
         }
