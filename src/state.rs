@@ -28,6 +28,9 @@ impl State {
             .await
             .unwrap();
 
+        let backend = format!("{:?}", adapter.get_info().backend);
+        log!("Backend: ", backend);
+
         // This is safe to do?
         std::mem::drop(instance);
 
