@@ -3,13 +3,13 @@ struct VertexInput {
 };
 
 struct FragmentOutput {
-    @builtin(position) color: vec4<f32>,
+    @location(0) color: vec4<f32>,
 };
 
 // Fragment shader
 @fragment
-fn fs_main(in: VertexInput) -> @location(0) FragmentOutput {
-    var output: FragmentOutput;
-    output.color = vec4<f32>(0.3, 0.2, 0.1, 1.0);
-    output
+fn fs_main(in: VertexInput) -> FragmentOutput {
+    var out: FragmentOutput;
+    out.color = vec4<f32>(0.3, 0.2, 0.1, 1.0);
+    return out;
 }

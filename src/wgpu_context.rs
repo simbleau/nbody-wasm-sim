@@ -159,7 +159,7 @@ impl WgpuContext {
             let mut pass =
                 renderer::get_render_pass(&mut encoder, &state, &view);
             pass.set_pipeline(&self.pipeline);
-            pass.draw(0..3, 0..1);
+            renderer::draw(&mut pass, &state);
         }
 
         // submit will accept anything that implements IntoIter

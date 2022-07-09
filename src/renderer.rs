@@ -4,6 +4,10 @@ use wgpu::{
 
 use crate::state::State;
 
+pub fn draw(pass: &mut RenderPass, _state: &State) {
+    pass.draw(0..3, 0..1);
+}
+
 pub fn get_render_pass<'pass>(
     encoder: &'pass mut CommandEncoder,
     state: &'pass State,
