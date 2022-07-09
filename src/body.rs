@@ -8,6 +8,19 @@ pub struct Body {
     pub elapsed: f32,
 }
 
+impl Default for Body {
+    fn default() -> Self {
+        Body {
+            verts: [
+                Vector2::new(0.0, 0.5), // This one gets moved (verts[0])
+                Vector2::new(-0.5, -0.5),
+                Vector2::new(0.5, -0.5),
+            ],
+            elapsed: 0.0,
+        }
+    }
+}
+
 impl Body {
     pub fn update(&mut self, dt: f32) {
         self.elapsed += dt;

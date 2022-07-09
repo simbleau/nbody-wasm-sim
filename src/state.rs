@@ -22,14 +22,7 @@ impl Default for State {
             mouse_pos: Vector2::default(),
             window_size: Vector2::default(),
             last_frame: None,
-            bodies: vec![Body {
-                verts: [
-                    Vector2::new(0.0, 0.5), // This one gets moved (verts[0])
-                    Vector2::new(-0.5, -0.5),
-                    Vector2::new(0.5, -0.5),
-                ],
-                elapsed: 0.0,
-            }],
+            bodies: vec![Body::default()],
             wireframe: false,
             paused: false,
         }
