@@ -1,28 +1,16 @@
-use nalgebra::Vector4;
 use wgpu::{
     CommandEncoder, RenderPass, RenderPassColorAttachment, RenderPipeline,
     TextureView,
 };
 
-use crate::{state::State, wgpu_context::WgpuContext};
-
-pub struct RenderInstance {
-    pub position: Vector4<f32>,
-}
-
-pub struct FrameDescription {
-    pub render_instances: Vec<RenderInstance>,
-}
-
-pub fn draw(pass: &mut RenderPass, state: &State) {
-    let _frame = state.get_frame_desc();
-    // TODO: Use the frame description
-    pass.draw(0..3, 0..1);
-}
+use crate::{
+    frame_description::GpuTriangle, state::State, wgpu_context::WgpuContext,
+};
 
 pub fn get_pipeline(context: &WgpuContext) -> RenderPipeline {
     let vert_shader = context.shaders.get("vert").unwrap();
     let frag_shader = context.shaders.get("frag").unwrap();
+
     let pipeline_layout = context.device.create_pipeline_layout(
         &wgpu::PipelineLayoutDescriptor {
             label: Some("Render Pipeline Layout"),
@@ -38,7 +26,7 @@ pub fn get_pipeline(context: &WgpuContext) -> RenderPipeline {
             vertex: wgpu::VertexState {
                 module: &vert_shader,
                 entry_point: "vs_main",
-                buffers: &[],
+                buffers: &[GpuTriangle::desc()],
             },
             fragment: Some(wgpu::FragmentState {
                 module: &frag_shader,

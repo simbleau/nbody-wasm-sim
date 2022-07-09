@@ -1,10 +1,10 @@
 use std::collections::HashMap;
 
 use gloo_console::log;
-use wgpu::{include_wgsl, ShaderModule};
+use wgpu::{include_wgsl, util::DeviceExt, ShaderModule};
 use winit::window::Window;
 
-use crate::{renderer, state::State};
+use crate::{frame_description::Vertex, renderer, state::State};
 
 pub struct WgpuContext {
     pub surface: wgpu::Surface,
@@ -104,12 +104,23 @@ impl WgpuContext {
             },
         );
 
+        let frame_desc = state.get_frame_desc();
+        let vertex_buffer =
+            self.device
+                .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                    label: Some("Vertex Buffer"),
+                    contents: &frame_desc.data(),
+                    usage: wgpu::BufferUsages::VERTEX,
+                });
+
         {
             let pipeline = renderer::get_pipeline(self);
             let mut pass =
                 renderer::get_render_pass(&mut encoder, &state, &view);
             pass.set_pipeline(&pipeline);
-            renderer::draw(&mut pass, &state);
+            pass.set_vertex_buffer(0, vertex_buffer.slice(..));
+            let num_verts = frame_desc.gpu_triangles.len() as u32 * 3;
+            pass.draw(0..num_verts, 0..1);
         }
 
         // submit will accept anything that implements IntoIter

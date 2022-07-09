@@ -1,5 +1,6 @@
 mod body;
 mod dom;
+mod frame_description;
 mod renderer;
 mod runtime;
 mod state;

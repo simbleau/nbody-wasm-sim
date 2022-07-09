@@ -2,8 +2,7 @@ use nalgebra::Vector2;
 
 const WAVE_SPEED: f32 = 3.14 * 2.0; // 2 oscillations per second
 
-#[repr(C)]
-#[derive(Copy, Clone, Debug)]
+#[derive(Clone, Debug)]
 pub struct Body {
     pub verts: [Vector2<f32>; 3],
     pub elapsed: f32,

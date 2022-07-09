@@ -1,9 +1,11 @@
 use instant::Instant;
-use nalgebra::{Vector2, Vector4};
+use nalgebra::Vector2;
 use winit::event::WindowEvent;
 
-use crate::body::Body;
-use crate::renderer::{FrameDescription, RenderInstance};
+use crate::{
+    body::Body,
+    frame_description::{FrameDescription, GpuTriangle, Vertex},
+};
 
 pub struct State {
     pub mouse_pos: Vector2<f64>,
@@ -22,9 +24,9 @@ impl Default for State {
             last_frame: None,
             bodies: vec![Body {
                 verts: [
-                    Vector2::new(0.5, 0.5), // This one gets moved (verts[0])
-                    Vector2::new(0.0, 1.0),
-                    Vector2::new(1.0, 1.0),
+                    Vector2::new(0.0, 0.5), // This one gets moved (verts[0])
+                    Vector2::new(-0.5, -0.5),
+                    Vector2::new(0.5, -0.5),
                 ],
                 elapsed: 0.0,
             }],
@@ -74,21 +76,26 @@ impl State {
     }
 
     pub fn get_frame_desc(&self) -> FrameDescription {
-        let mut render_instances = Vec::new();
+        let mut gpu_triangles = Vec::new();
 
         for body in self.bodies.iter() {
-            render_instances.push(RenderInstance {
-                // TODO: temporary position hack for triangle vert buffer
-                // challenge
-                position: Vector4::new(
-                    body.verts[0].x,
-                    body.verts[0].y,
-                    0.0,
-                    0.0,
-                ),
-            });
+            let verts = [
+                Vertex {
+                    position: [body.verts[0].x, body.verts[0].y, 0.0],
+                    color: [1.0, 0.0, 0.0],
+                },
+                Vertex {
+                    position: [body.verts[1].x, body.verts[1].y, 0.0],
+                    color: [0.0, 1.0, 0.0],
+                },
+                Vertex {
+                    position: [body.verts[2].x, body.verts[2].y, 0.0],
+                    color: [0.0, 0.0, 1.0],
+                },
+            ];
+            gpu_triangles.push(GpuTriangle { verts })
         }
 
-        FrameDescription { render_instances }
+        FrameDescription { gpu_triangles }
     }
 }

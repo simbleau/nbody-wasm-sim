@@ -1,5 +1,6 @@
-struct VertexInput {
+struct Input {
     @builtin(position) clip_position: vec4<f32>,
+    @location(0) color: vec4<f32>,
 };
 
 struct FragmentOutput {
@@ -8,8 +9,8 @@ struct FragmentOutput {
 
 // Fragment shader
 @fragment
-fn fs_main(in: VertexInput) -> FragmentOutput {
+fn fs_main(in: Input) -> FragmentOutput {
     var out: FragmentOutput;
-    out.color = vec4<f32>(0.3, 0.2, 0.1, 1.0);
+    out.color = in.color;
     return out;
 }
