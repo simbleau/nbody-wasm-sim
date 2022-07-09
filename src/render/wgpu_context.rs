@@ -1,12 +1,12 @@
 use std::collections::HashMap;
 
 use gloo_console::log;
-use wgpu::{include_wgsl, util::DeviceExt, ShaderModule};
+use wgpu::{include_wgsl, ShaderModule};
 use winit::window::Window;
 
 use crate::sim::State;
 
-use super::renderer;
+use super::{frame_descriptor::FrameDescriptor, pipelines, renderer};
 
 pub struct WgpuContext {
     pub surface: wgpu::Surface,
@@ -106,27 +106,24 @@ impl WgpuContext {
             },
         );
 
-        let frame_desc = renderer::get_frame_desc(state);
-
-        let vertex_buffer =
-            self.device
-                .create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                    label: Some("Vertex Buffer"),
-                    contents: &frame_desc.get_vertex_buffer(),
-                    usage: wgpu::BufferUsages::VERTEX,
-                });
-
+        let frame_desc = FrameDescriptor::from(state);
+        let vertex_buffer = frame_desc.as_vertex_buffer(&self.device);
         {
-            let pipeline = renderer::get_pipeline(self);
+            let pipeline = pipelines::get(
+                match state.wireframe {
+                    true => pipelines::Pipeline::Wireframe,
+                    false => pipelines::Pipeline::Solid,
+                },
+                self,
+            );
             let mut pass =
                 renderer::get_render_pass(&mut encoder, &state, &view);
             pass.set_pipeline(&pipeline);
             pass.set_vertex_buffer(0, vertex_buffer.slice(..));
-            let num_verts = frame_desc.gpu_triangles.len() as u32 * 3;
-            pass.draw(0..num_verts, 0..1);
+            pass.draw(0..frame_desc.verticies(), 0..frame_desc.instances());
         }
 
-        // submit will accept anything that implements IntoIter
+        // Submit will accept anything that implements IntoIter
         self.queue.submit(std::iter::once(encoder.finish()));
         output.present();
 

@@ -36,6 +36,12 @@ impl State {
             {
                 self.paused = !self.paused;
             }
+            WindowEvent::KeyboardInput { input, .. }
+                if input.virtual_keycode == Some(VirtualKeyCode::W)
+                    && input.state == ElementState::Released =>
+            {
+                self.wireframe = !self.wireframe;
+            }
             WindowEvent::CursorMoved { position, .. } => {
                 self.mouse_pos = Vector2::new(position.x, position.y);
             }
