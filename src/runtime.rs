@@ -4,8 +4,8 @@ use winit::event_loop::{ControlFlow, EventLoopWindowTarget};
 use winit::window::Window;
 
 use crate::dom::Dom;
-use crate::state::State;
-use crate::wgpu_context::WgpuContext;
+use crate::render::WgpuContext;
+use crate::sim::State;
 
 pub struct Runtime {
     context: WgpuContext,
@@ -33,13 +33,15 @@ impl Runtime {
         // Log every event
         self.dom.log_list.log_event(&event);
 
-        // Handle input and surface errors
-        if let Event::WindowEvent {
-            window_id: id,
-            event: ref winevent,
-        } = event
-        {
-            if id == self.window.id() {
+        // Update world
+        self.state.update();
+
+        // Handle events
+        match event {
+            Event::WindowEvent {
+                window_id: id,
+                event: ref winevent,
+            } if id == self.window.id() => {
                 self.state.input(winevent);
                 match winevent {
                     WindowEvent::Resized(physical_size) => {
@@ -48,19 +50,11 @@ impl Runtime {
                     WindowEvent::ScaleFactorChanged {
                         new_inner_size, ..
                     } => {
-                        // new_inner_size is &&mut so we have to dereference
-                        // it twice
                         self.context.resize(**new_inner_size);
                     }
                     _ => (),
                 }
             }
-        };
-
-        // Update state
-        self.state.update();
-
-        match event {
             Event::MainEventsCleared => {
                 // RedrawRequested will only trigger once, unless we manually
                 // request it.

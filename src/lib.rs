@@ -1,14 +1,12 @@
-mod body;
 mod dom;
-mod frame_description;
-mod renderer;
+mod gpu_primitives;
+mod render;
 mod runtime;
-mod state;
-mod wgpu_context;
+mod sim;
 
 use gloo_console::log;
+use render::WgpuContext;
 use wasm_bindgen::prelude::*;
-use wgpu_context::WgpuContext;
 use winit::dpi::PhysicalSize;
 use winit::platform::web::WindowBuilderExtWebSys;
 use winit::{event_loop::EventLoop, window::WindowBuilder};

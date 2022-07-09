@@ -4,8 +4,11 @@ use wgpu::{
 };
 
 use crate::{
-    frame_description::GpuTriangle, state::State, wgpu_context::WgpuContext,
+    gpu_primitives::GpuPrimitive, gpu_primitives::GpuTriangle,
+    render::WgpuContext, sim::State,
 };
+
+use super::frame_description::FrameDescription;
 
 pub fn get_pipeline(context: &WgpuContext) -> RenderPipeline {
     let vert_shader = context.shaders.get("vert").unwrap();
@@ -97,4 +100,14 @@ pub fn get_attachments<'a>(
             store: true,
         },
     })
+}
+
+pub fn get_frame_desc(state: &State) -> FrameDescription {
+    let mut gpu_triangles = Vec::new();
+
+    for body in &state.bodies {
+        gpu_triangles.push(body.into())
+    }
+
+    FrameDescription { gpu_triangles }
 }

@@ -1,11 +1,8 @@
 use instant::Instant;
 use nalgebra::Vector2;
-use winit::event::WindowEvent;
+use winit::event::{ElementState, VirtualKeyCode, WindowEvent};
 
-use crate::{
-    body::Body,
-    frame_description::{FrameDescription, GpuTriangle, Vertex},
-};
+use super::Body;
 
 pub struct State {
     pub mouse_pos: Vector2<f64>,
@@ -33,6 +30,12 @@ impl State {
     pub fn input(&mut self, event: &WindowEvent) {
         // We have no events to handle currently
         match event {
+            WindowEvent::KeyboardInput { input, .. }
+                if input.virtual_keycode == Some(VirtualKeyCode::Space)
+                    && input.state == ElementState::Released =>
+            {
+                self.paused = !self.paused;
+            }
             WindowEvent::CursorMoved { position, .. } => {
                 self.mouse_pos = Vector2::new(position.x, position.y);
             }
@@ -66,29 +69,5 @@ impl State {
                 self.last_frame = Some(Instant::now());
             }
         }
-    }
-
-    pub fn get_frame_desc(&self) -> FrameDescription {
-        let mut gpu_triangles = Vec::new();
-
-        for body in self.bodies.iter() {
-            let verts = [
-                Vertex {
-                    position: [body.verts[0].x, body.verts[0].y, 0.0],
-                    color: [1.0, 0.0, 0.0],
-                },
-                Vertex {
-                    position: [body.verts[1].x, body.verts[1].y, 0.0],
-                    color: [0.0, 1.0, 0.0],
-                },
-                Vertex {
-                    position: [body.verts[2].x, body.verts[2].y, 0.0],
-                    color: [0.0, 0.0, 1.0],
-                },
-            ];
-            gpu_triangles.push(GpuTriangle { verts })
-        }
-
-        FrameDescription { gpu_triangles }
     }
 }

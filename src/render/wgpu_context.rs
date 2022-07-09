@@ -4,7 +4,9 @@ use gloo_console::log;
 use wgpu::{include_wgsl, util::DeviceExt, ShaderModule};
 use winit::window::Window;
 
-use crate::{frame_description::Vertex, renderer, state::State};
+use crate::sim::State;
+
+use super::renderer;
 
 pub struct WgpuContext {
     pub surface: wgpu::Surface,
@@ -64,9 +66,9 @@ impl WgpuContext {
         surface.configure(&device, &config);
 
         let vert_shader =
-            device.create_shader_module(include_wgsl!("shaders/vert.wgsl"));
+            device.create_shader_module(include_wgsl!("../shaders/vert.wgsl"));
         let frag_shader =
-            device.create_shader_module(include_wgsl!("shaders/frag.wgsl"));
+            device.create_shader_module(include_wgsl!("../shaders/frag.wgsl"));
         let mut shaders = HashMap::new();
         shaders.insert("vert", vert_shader);
         shaders.insert("frag", frag_shader);
@@ -104,12 +106,13 @@ impl WgpuContext {
             },
         );
 
-        let frame_desc = state.get_frame_desc();
+        let frame_desc = renderer::get_frame_desc(state);
+
         let vertex_buffer =
             self.device
                 .create_buffer_init(&wgpu::util::BufferInitDescriptor {
                     label: Some("Vertex Buffer"),
-                    contents: &frame_desc.data(),
+                    contents: &frame_desc.get_vertex_buffer(),
                     usage: wgpu::BufferUsages::VERTEX,
                 });
 
