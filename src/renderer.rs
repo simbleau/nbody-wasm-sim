@@ -1,10 +1,21 @@
+use nalgebra::Vector4;
 use wgpu::{
     CommandEncoder, RenderPass, RenderPassColorAttachment, TextureView,
 };
 
 use crate::state::State;
 
-pub fn draw(pass: &mut RenderPass, _state: &State) {
+pub struct RenderInstance {
+    pub position: Vector4<f32>,
+}
+
+pub struct FrameDescription {
+    pub render_instances: Vec<RenderInstance>,
+}
+
+pub fn draw(pass: &mut RenderPass, state: &State) {
+    let _frame = state.get_frame_desc();
+    // TODO: Use the frame description
     pass.draw(0..3, 0..1);
 }
 

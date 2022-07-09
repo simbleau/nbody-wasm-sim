@@ -33,29 +33,33 @@ impl Runtime {
         // Log every event
         self.dom.log_list.log_event(&event);
 
-        match event {
-            Event::WindowEvent {
-                window_id: id,
-                event: winevent,
-            } if id == self.window.id() => {
-                if !self.context.input(&winevent) {
-                    self.state.input(&winevent);
-                    match winevent {
-                        WindowEvent::Resized(physical_size) => {
-                            self.context.resize(physical_size);
-                        }
-                        WindowEvent::ScaleFactorChanged {
-                            new_inner_size,
-                            ..
-                        } => {
-                            // new_inner_size is &&mut so we have to dereference
-                            // it twice
-                            self.context.resize(*new_inner_size);
-                        }
-                        _ => (),
+        // Perform an update
+        if let Event::WindowEvent {
+            window_id: id,
+            event: ref winevent,
+        } = event
+        {
+            if id == self.window.id() {
+                self.state.input(winevent);
+                match winevent {
+                    WindowEvent::Resized(physical_size) => {
+                        self.context.resize(*physical_size);
                     }
+                    WindowEvent::ScaleFactorChanged {
+                        new_inner_size, ..
+                    } => {
+                        // new_inner_size is &&mut so we have to dereference
+                        // it twice
+                        self.context.resize(**new_inner_size);
+                    }
+                    _ => (),
                 }
             }
+        };
+
+        self.state.update();
+
+        match event {
             Event::MainEventsCleared => {
                 // RedrawRequested will only trigger once, unless we manually
                 // request it.
@@ -64,7 +68,6 @@ impl Runtime {
             Event::RedrawRequested(window_id)
                 if window_id == self.window.id() =>
             {
-                self.context.update();
                 match self.context.render(&self.state) {
                     Ok(_) => {
                         // Update frame count
