@@ -1,6 +1,23 @@
-use wgpu::{RenderPassColorAttachment, TextureView};
+use wgpu::{
+    CommandEncoder, RenderPass, RenderPassColorAttachment, TextureView,
+};
 
 use crate::state::State;
+
+pub fn get_render_pass<'pass>(
+    encoder: &'pass mut CommandEncoder,
+    state: &'pass State,
+    view: &'pass TextureView,
+) -> RenderPass<'pass> {
+    let attachments = get_attachments(state, &view);
+    let pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+        label: Some("Render Pass"),
+        color_attachments: &[attachments],
+        depth_stencil_attachment: None,
+    });
+
+    pass
+}
 
 pub fn get_attachments<'a>(
     state: &'a State,
