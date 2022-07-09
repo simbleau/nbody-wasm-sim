@@ -65,13 +65,7 @@ impl WgpuContext {
         };
         surface.configure(&device, &config);
 
-        let vert_shader =
-            device.create_shader_module(include_wgsl!("../shaders/vert.wgsl"));
-        let frag_shader =
-            device.create_shader_module(include_wgsl!("../shaders/frag.wgsl"));
-        let mut shaders = HashMap::new();
-        shaders.insert("vert", vert_shader);
-        shaders.insert("frag", frag_shader);
+        let shaders = HashMap::new();
 
         Self {
             surface,

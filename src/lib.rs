@@ -7,6 +7,7 @@ mod sim;
 use gloo_console::log;
 use render::WgpuContext;
 use wasm_bindgen::prelude::*;
+use wgpu::include_wgsl;
 use winit::dpi::PhysicalSize;
 use winit::platform::web::WindowBuilderExtWebSys;
 use winit::{event_loop::EventLoop, window::WindowBuilder};
@@ -21,6 +22,7 @@ pub async fn run() {
 
     let dom = Dom::new();
     let canvas = dom::get_canvas();
+    log!("Acquired DOM elements");
 
     // Create window
     let event_loop = EventLoop::new();
@@ -33,13 +35,26 @@ pub async fn run() {
             Ok(w)
         })
         .expect("Could not build window");
+    log!("Created window");
 
     // Connect graphics card to window
-    let context = WgpuContext::new(&window).await;
+    let mut context = WgpuContext::new(&window).await;
     log!("Acquired graphics context");
+
+    // Load shaders
+    let vert_shader = context
+        .device
+        .create_shader_module(include_wgsl!("shaders/vert.wgsl"));
+    let frag_shader = context
+        .device
+        .create_shader_module(include_wgsl!("shaders/frag.wgsl"));
+    context.shaders.insert("vert", vert_shader);
+    context.shaders.insert("frag", frag_shader);
+    log!("Loaded shaders");
 
     // Run program
     let mut runtime = Runtime::new(context, window, dom);
+    log!("Starting...");
     event_loop.run(move |event, target, control_flow| {
         runtime.main_loop(event, target, control_flow)
     });
