@@ -16,6 +16,5 @@ impl Body {
         // Make the top vertex move in a circle
         self.verts[0].x = (self.elapsed * WAVE_SPEED).cos() / 3.0 + 0.5;
         self.verts[0].y = (self.elapsed * WAVE_SPEED).sin() / 3.0 + 0.5;
-        gloo_console::log!(self.verts[0].x, self.verts[0].y);
     }
 }

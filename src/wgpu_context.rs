@@ -1,6 +1,8 @@
+use std::collections::HashMap;
+
 use gloo_console::log;
-use wgpu::include_wgsl;
-use winit::{event::WindowEvent, window::Window};
+use wgpu::{include_wgsl, ShaderModule};
+use winit::window::Window;
 
 use crate::{renderer, state::State};
 
@@ -10,7 +12,7 @@ pub struct WgpuContext {
     pub queue: wgpu::Queue,
     pub config: wgpu::SurfaceConfiguration,
     pub size: winit::dpi::PhysicalSize<u32>,
-    pub pipeline: wgpu::RenderPipeline,
+    pub shaders: HashMap<&'static str, ShaderModule>,
 }
 
 impl WgpuContext {
@@ -65,52 +67,9 @@ impl WgpuContext {
             device.create_shader_module(include_wgsl!("shaders/vert.wgsl"));
         let frag_shader =
             device.create_shader_module(include_wgsl!("shaders/frag.wgsl"));
-        let pipeline_layout =
-            device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-                label: Some("Render Pipeline Layout"),
-                bind_group_layouts: &[],   // ?
-                push_constant_ranges: &[], // ?
-            });
-
-        let pipeline =
-            device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-                label: Some("Render Pipeline"),
-                layout: Some(&pipeline_layout),
-                vertex: wgpu::VertexState {
-                    module: &vert_shader,
-                    entry_point: "vs_main",
-                    buffers: &[],
-                },
-                fragment: Some(wgpu::FragmentState {
-                    module: &frag_shader,
-                    entry_point: "fs_main",
-                    targets: &[Some(wgpu::ColorTargetState {
-                        format: config.format,
-                        blend: Some(wgpu::BlendState::REPLACE),
-                        write_mask: wgpu::ColorWrites::ALL,
-                    })],
-                }),
-                primitive: wgpu::PrimitiveState {
-                    topology: wgpu::PrimitiveTopology::TriangleList,
-                    strip_index_format: None,
-                    front_face: wgpu::FrontFace::Ccw,
-                    cull_mode: Some(wgpu::Face::Back),
-                    // Setting this to anything other than Fill requires
-                    // Features::NON_FILL_POLYGON_MODE
-                    polygon_mode: wgpu::PolygonMode::Fill,
-                    // Requires Features::DEPTH_CLIP_CONTROL
-                    unclipped_depth: false,
-                    // Requires Features::CONSERVATIVE_RASTERIZATION
-                    conservative: false,
-                },
-                depth_stencil: None,
-                multisample: wgpu::MultisampleState {
-                    count: 1,
-                    mask: !0,
-                    alpha_to_coverage_enabled: false,
-                },
-                multiview: None,
-            });
+        let mut shaders = HashMap::new();
+        shaders.insert("vert", vert_shader);
+        shaders.insert("frag", frag_shader);
 
         Self {
             surface,
@@ -118,7 +77,7 @@ impl WgpuContext {
             queue,
             config,
             size,
-            pipeline,
+            shaders,
         }
     }
 
@@ -146,9 +105,10 @@ impl WgpuContext {
         );
 
         {
+            let pipeline = renderer::get_pipeline(self);
             let mut pass =
                 renderer::get_render_pass(&mut encoder, &state, &view);
-            pass.set_pipeline(&self.pipeline);
+            pass.set_pipeline(&pipeline);
             renderer::draw(&mut pass, &state);
         }
 

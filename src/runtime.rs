@@ -33,7 +33,7 @@ impl Runtime {
         // Log every event
         self.dom.log_list.log_event(&event);
 
-        // Perform an update
+        // Handle input and surface errors
         if let Event::WindowEvent {
             window_id: id,
             event: ref winevent,
@@ -57,6 +57,7 @@ impl Runtime {
             }
         };
 
+        // Update state
         self.state.update();
 
         match event {
