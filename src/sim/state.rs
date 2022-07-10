@@ -1,5 +1,5 @@
 use instant::Instant;
-use nalgebra::Vector2;
+use nalgebra::{Vector2, Vector3};
 use winit::event::{ElementState, VirtualKeyCode, WindowEvent};
 
 use super::Body;
@@ -11,6 +11,7 @@ pub struct State {
     pub bodies: Vec<Body>,
     pub wireframe: bool,
     pub paused: bool,
+    pub bg_color: Vector3<f64>,
 }
 
 impl Default for State {
@@ -22,6 +23,7 @@ impl Default for State {
             bodies: vec![Body::default()],
             wireframe: false,
             paused: false,
+            bg_color: Vector3::default(),
         }
     }
 }
@@ -58,6 +60,12 @@ impl State {
             self.last_frame = Some(Instant::now());
             return;
         }
+
+        // Update background color
+        self.bg_color = self
+            .mouse_pos
+            .component_div(&self.window_size.cast::<f64>())
+            .push(0.0);
 
         match self.last_frame {
             Some(last_frame) => {

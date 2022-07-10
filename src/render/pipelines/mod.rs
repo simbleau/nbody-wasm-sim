@@ -9,9 +9,11 @@ pub enum Pipeline {
     Solid,
 }
 
-pub fn get(pipeline: Pipeline, context: &WgpuContext) -> RenderPipeline {
-    match pipeline {
-        Pipeline::Wireframe => wireframe::get(context),
-        Pipeline::Solid => solid::get(context),
+impl Pipeline {
+    pub fn get(&self, context: &WgpuContext) -> RenderPipeline {
+        match self {
+            Pipeline::Wireframe => wireframe::get(context),
+            Pipeline::Solid => solid::get(context),
+        }
     }
 }

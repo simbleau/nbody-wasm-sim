@@ -1,5 +1,4 @@
 pub mod pipelines;
-pub mod renderer;
 
 mod frame_descriptor;
 

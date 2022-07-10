@@ -1,12 +1,12 @@
 use std::collections::HashMap;
 
 use gloo_console::log;
-use wgpu::{include_wgsl, ShaderModule};
+use wgpu::ShaderModule;
 use winit::window::Window;
 
 use crate::sim::State;
 
-use super::{frame_descriptor::FrameDescriptor, pipelines, renderer};
+use super::{frame_descriptor::FrameDescriptor, pipelines};
 
 pub struct WgpuContext {
     pub surface: wgpu::Surface,
@@ -40,8 +40,6 @@ impl WgpuContext {
         let backend = format!("{:?}", adapter.get_info().backend);
         log!("Backend:", backend);
 
-        std::mem::drop(instance);
-
         let (device, queue) = adapter
             .request_device(
                 &wgpu::DeviceDescriptor {
@@ -65,15 +63,13 @@ impl WgpuContext {
         };
         surface.configure(&device, &config);
 
-        let shaders = HashMap::new();
-
         Self {
             surface,
             device,
             queue,
             config,
             size,
-            shaders,
+            shaders: HashMap::new(),
         }
     }
 
@@ -100,18 +96,36 @@ impl WgpuContext {
             },
         );
 
-        let frame_desc = FrameDescriptor::from(state);
+        let frame_desc = FrameDescriptor::from(&state);
         let vertex_buffer = frame_desc.as_vertex_buffer(&self.device);
         {
-            let pipeline = pipelines::get(
-                match state.wireframe {
-                    true => pipelines::Pipeline::Wireframe,
-                    false => pipelines::Pipeline::Solid,
-                },
-                self,
-            );
+            let pipeline = match &state.wireframe {
+                true => pipelines::Pipeline::Wireframe,
+                false => pipelines::Pipeline::Solid,
+            }
+            .get(self);
+
+            let color = wgpu::Color {
+                r: state.bg_color.x,
+                g: state.bg_color.y,
+                b: state.bg_color.z,
+                a: 1.0,
+            };
             let mut pass =
-                renderer::get_render_pass(&mut encoder, &state, &view);
+                encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+                    label: Some("Render Pass"),
+                    color_attachments: &[Some(
+                        wgpu::RenderPassColorAttachment {
+                            view: &view,
+                            resolve_target: None,
+                            ops: wgpu::Operations {
+                                load: wgpu::LoadOp::Clear(color),
+                                store: true,
+                            },
+                        },
+                    )],
+                    depth_stencil_attachment: None,
+                });
             pass.set_pipeline(&pipeline);
             pass.set_vertex_buffer(0, vertex_buffer.slice(..));
             pass.draw(0..frame_desc.verticies(), 0..frame_desc.instances());
