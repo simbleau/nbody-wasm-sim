@@ -58,19 +58,20 @@ impl State {
         // Remain paused
         if self.paused {
             self.last_frame = Some(Instant::now());
+            self.bg_color = Vector3::default();
             return;
         }
-
-        // Update background color
-        self.bg_color = self
-            .mouse_pos
-            .component_div(&self.window_size.cast::<f64>())
-            .push(0.0);
 
         match self.last_frame {
             Some(last_frame) => {
                 let now = Instant::now();
                 let dt = now - last_frame;
+
+                // Update background color
+                self.bg_color = self
+                    .mouse_pos
+                    .component_div(&self.window_size.cast::<f64>())
+                    .push(0.0);
 
                 // Simulation logic
                 let dt_f32 = dt.as_secs_f32();
