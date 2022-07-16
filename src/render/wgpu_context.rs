@@ -97,7 +97,8 @@ impl WgpuContext {
         );
 
         let frame_desc = FrameDescriptor::from(&state);
-        let vertex_buffer = frame_desc.as_vertex_buffer(&self.device);
+        let vertex_buffer = frame_desc.get_vertex_buffer(&self.device);
+        let index_buffer = frame_desc.get_index_buffer(&self.device);
         {
             let pipeline = match &state.wireframe {
                 true => pipelines::Pipeline::Wireframe,
@@ -128,7 +129,8 @@ impl WgpuContext {
                 });
             pass.set_pipeline(&pipeline);
             pass.set_vertex_buffer(0, vertex_buffer.slice(..));
-            pass.draw(0..frame_desc.verticies(), 0..frame_desc.instances());
+            pass.set_index_buffer(index_buffer.slice(..), wgpu::IndexFormat::Uint16);
+            pass.draw_indexed(0..frame_desc.indicies(), 0, 0..frame_desc.instances());
         }
 
         // Submit will accept anything that implements IntoIter
