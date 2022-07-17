@@ -52,24 +52,22 @@ impl FrameDescriptor {
     }
 
     pub fn get_index_buffer(&self, device: &Device) -> Buffer {
-        device.create_buffer_init(
-            &wgpu::util::BufferInitDescriptor {
-                label: Some("Index Buffer"),
-                contents: bytemuck::cast_slice(&self.get_index_buffer_contents()),
-                usage: wgpu::BufferUsages::INDEX,
-            }
-        )
+        device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("Index Buffer"),
+            contents: bytemuck::cast_slice(&self.get_index_buffer_contents()),
+            usage: wgpu::BufferUsages::INDEX,
+        })
     }
 
     pub fn get_index_buffer_contents(&self) -> Vec<u16> {
         let mut buf: Vec<u16> = Vec::new();
-        
+
         let stride = match self.wireframe {
             true => 4,
             false => 3,
         };
 
-        for (i,_) in self.gpu_triangles.iter().enumerate() {
+        for (i, _) in self.gpu_triangles.iter().enumerate() {
             let indx = i as u16 * stride;
 
             buf.push(indx);

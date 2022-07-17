@@ -1,4 +1,4 @@
-pub trait GpuPrimitive: bytemuck::Pod + bytemuck::Zeroable {
+pub trait GpuPrimitive {
     fn data(&self) -> Vec<u8>;
     fn desc<'a>() -> wgpu::VertexBufferLayout<'a>;
 }
@@ -8,3 +8,6 @@ pub use vertex::GpuVertex;
 
 mod triangle;
 pub use triangle::GpuTriangle;
+
+mod circle;
+pub use circle::GpuCircle;
