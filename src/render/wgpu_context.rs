@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use gloo_console::log;
-use wgpu::{BindGroup, ShaderModule, Texture};
+use wgpu::{BindGroup, BindGroupLayout, ShaderModule, Texture};
 use winit::window::Window;
 
 use crate::sim::State;
@@ -15,7 +15,7 @@ pub struct WgpuContext {
     pub config: wgpu::SurfaceConfiguration,
     pub size: winit::dpi::PhysicalSize<u32>,
     shaders: HashMap<&'static str, ShaderModule>,
-    textures: HashMap<&'static str, (Texture, BindGroup)>,
+    textures: HashMap<&'static str, (Texture, BindGroup, BindGroupLayout)>,
 }
 
 impl WgpuContext {
@@ -131,6 +131,8 @@ impl WgpuContext {
                     depth_stencil_attachment: None,
                 });
             pass.set_pipeline(&pipeline);
+            let (_, bind_group, _) = self.get_texture("cookie");
+            pass.set_bind_group(0, bind_group, &[]);
             pass.set_vertex_buffer(0, vertex_buffer.slice(..));
             pass.set_index_buffer(
                 index_buffer.slice(..),
@@ -265,7 +267,8 @@ impl WgpuContext {
                 label: Some(name),
             });
 
-        self.textures.insert(name, (texture, bind_group));
+        self.textures
+            .insert(name, (texture, bind_group, texture_bind_group_layout));
     }
 
     pub fn get_shader(&self, name: &'static str) -> &ShaderModule {
@@ -274,7 +277,10 @@ impl WgpuContext {
             .expect(&format!("No shader with name '{}'", name))
     }
 
-    pub fn get_texture(&self, name: &'static str) -> &(Texture, BindGroup) {
+    pub fn get_texture(
+        &self,
+        name: &'static str,
+    ) -> &(Texture, BindGroup, BindGroupLayout) {
         self.textures
             .get(name)
             .expect(&format!("No texture with name '{}'", name))

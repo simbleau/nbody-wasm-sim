@@ -53,15 +53,15 @@ impl From<&Body> for GpuTriangle {
                 let verts = [
                     GpuVertex {
                         position: [p1_x, p1_y, 0.0],
-                        color: [1.0, 0.0, 0.0],
+                        uv: [0.5, 0.25],
                     },
                     GpuVertex {
                         position: [p2_x, p2_y, 0.0],
-                        color: [0.0, 1.0, 0.0],
+                        uv: [0.25, 0.75],
                     },
                     GpuVertex {
                         position: [p3_x, p3_y, 0.0],
-                        color: [0.0, 0.0, 1.0],
+                        uv: [0.75, 0.75],
                     },
                 ];
                 GpuTriangle { verts }
