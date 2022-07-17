@@ -6,10 +6,11 @@ pub(crate) fn get(
     let vert_shader = context.get_shader("vert");
     let frag_shader = context.get_shader("frag");
 
+    let (_, _, bind_group_layout) = context.get_texture("cookie");
     let pipeline_layout = context.device.create_pipeline_layout(
         &wgpu::PipelineLayoutDescriptor {
             label: Some("Render Pipeline Layout"),
-            bind_group_layouts: &[],
+            bind_group_layouts: &[bind_group_layout],
             push_constant_ranges: &[],
         },
     );
