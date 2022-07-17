@@ -7,7 +7,6 @@ mod sim;
 use gloo_console::log;
 use render::WgpuContext;
 use wasm_bindgen::prelude::*;
-use wgpu::include_wgsl;
 use winit::dpi::PhysicalSize;
 use winit::platform::web::WindowBuilderExtWebSys;
 use winit::{event_loop::EventLoop, window::WindowBuilder};
@@ -42,23 +41,11 @@ pub async fn run() {
     log!("Acquired graphics context");
 
     // Load shaders
-    let vert_shader = context
-        .device
-        .create_shader_module(include_wgsl!("../assets/shaders/vert.wgsl"));
-    let frag_shader = context
-        .device
-        .create_shader_module(include_wgsl!("../assets/shaders/frag.wgsl"));
-    context.shaders.insert("vert", vert_shader);
-    context.shaders.insert("frag", frag_shader);
+    context.add_shader("vert", "../assets/shaders/vert.wgsl");
+    context.add_shader("frag", "../assets/shaders/frag.wgsl");
     log!("Loaded shaders");
 
-    // Load textures
-    let diffuse_bytes = include_bytes!("../assets/textures/cookie.png");
-    let diffuse_image = image::load_from_memory(diffuse_bytes).unwrap();
-    let _diffuse_rgba = diffuse_image.to_rgba8();
-
-    use image::GenericImageView;
-    let _dimensions = diffuse_image.dimensions();
+    context.add_texture("cookie", "../assets/textures/cookie.png");
 
     // Run program
     let mut runtime = Runtime::new(context, window, dom);
