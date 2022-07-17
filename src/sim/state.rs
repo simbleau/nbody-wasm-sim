@@ -1,4 +1,4 @@
-use glam::{DVec2, DVec3, UVec2, Vec2, Vec3};
+use glam::{DVec2, DVec3, UVec2};
 use instant::Instant;
 use winit::event::{ElementState, VirtualKeyCode, WindowEvent};
 
