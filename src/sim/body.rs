@@ -1,10 +1,10 @@
-use nalgebra::Vector2;
+use glam::Vec2;
 
 const WAVE_SPEED: f32 = 3.14 * 2.0;
 
 #[derive(Clone, Debug)]
 pub struct Body {
-    pub origin: Vector2<f32>,
+    pub origin: Vec2,
     pub geometry: Geometry,
     pub elapsed: f32,
 }
@@ -12,11 +12,11 @@ pub struct Body {
 impl Default for Body {
     fn default() -> Self {
         Body {
-            origin: Vector2::new(0.0, 0.0),
+            origin: Vec2::new(0.0, 0.0),
             geometry: Geometry::Triangle([
-                Vector2::new(0.0, 0.5),
-                Vector2::new(-0.5, -0.5),
-                Vector2::new(0.5, -0.5),
+                Vec2::new(0.0, 0.5),
+                Vec2::new(-0.5, -0.5),
+                Vec2::new(0.5, -0.5),
             ]),
             elapsed: 0.0,
         }
