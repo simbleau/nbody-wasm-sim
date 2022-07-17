@@ -112,6 +112,7 @@ impl WgpuContext {
                 b: state.bg_color.z,
                 a: 1.0,
             };
+
             let mut pass =
                 encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                     label: Some("Render Pass"),
@@ -129,8 +130,15 @@ impl WgpuContext {
                 });
             pass.set_pipeline(&pipeline);
             pass.set_vertex_buffer(0, vertex_buffer.slice(..));
-            pass.set_index_buffer(index_buffer.slice(..), wgpu::IndexFormat::Uint16);
-            pass.draw_indexed(0..frame_desc.indicies(), 0, 0..frame_desc.instances());
+            pass.set_index_buffer(
+                index_buffer.slice(..),
+                wgpu::IndexFormat::Uint16,
+            );
+            pass.draw_indexed(
+                0..frame_desc.indicies(),
+                0,
+                0..frame_desc.instances(),
+            );
         }
 
         // Submit will accept anything that implements IntoIter
