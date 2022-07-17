@@ -1,29 +1,29 @@
+use glam::{DVec2, DVec3, UVec2, Vec2, Vec3};
 use instant::Instant;
-use nalgebra::{Vector2, Vector3};
 use winit::event::{ElementState, VirtualKeyCode, WindowEvent};
 
 use super::Body;
 
 pub struct State {
-    pub mouse_pos: Vector2<f64>,
-    pub window_size: Vector2<u32>,
+    pub mouse_pos: DVec2,
+    pub window_size: UVec2,
     pub last_frame: Option<Instant>,
     pub bodies: Vec<Body>,
     pub wireframe: bool,
     pub paused: bool,
-    pub bg_color: Vector3<f64>,
+    pub bg_color: DVec3,
 }
 
 impl Default for State {
     fn default() -> Self {
         Self {
-            mouse_pos: Vector2::default(),
-            window_size: Vector2::default(),
+            mouse_pos: DVec2::default(),
+            window_size: UVec2::default(),
             last_frame: None,
             bodies: vec![Body::default()],
             wireframe: false,
             paused: false,
-            bg_color: Vector3::default(),
+            bg_color: DVec3::default(),
         }
     }
 }
@@ -45,10 +45,10 @@ impl State {
                 self.wireframe = !self.wireframe;
             }
             WindowEvent::CursorMoved { position, .. } => {
-                self.mouse_pos = Vector2::new(position.x, position.y);
+                self.mouse_pos = DVec2::new(position.x, position.y);
             }
             WindowEvent::Resized(size) => {
-                self.window_size = Vector2::new(size.width, size.height);
+                self.window_size = UVec2::new(size.width, size.height);
             }
             _ => {}
         }
@@ -58,7 +58,7 @@ impl State {
         // Remain paused
         if self.paused {
             self.last_frame = Some(Instant::now());
-            self.bg_color = Vector3::default();
+            self.bg_color = DVec3::default();
             return;
         }
 
@@ -68,10 +68,8 @@ impl State {
                 let dt = now - last_frame;
 
                 // Update background color
-                self.bg_color = self
-                    .mouse_pos
-                    .component_div(&self.window_size.cast::<f64>())
-                    .push(0.0);
+                self.bg_color =
+                    (self.mouse_pos / self.window_size.as_dvec2()).extend(0.0);
 
                 // Simulation logic
                 let dt_f32 = dt.as_secs_f32();
