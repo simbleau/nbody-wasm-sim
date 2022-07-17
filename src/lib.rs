@@ -44,13 +44,21 @@ pub async fn run() {
     // Load shaders
     let vert_shader = context
         .device
-        .create_shader_module(include_wgsl!("shaders/vert.wgsl"));
+        .create_shader_module(include_wgsl!("../assets/shaders/vert.wgsl"));
     let frag_shader = context
         .device
-        .create_shader_module(include_wgsl!("shaders/frag.wgsl"));
+        .create_shader_module(include_wgsl!("../assets/shaders/frag.wgsl"));
     context.shaders.insert("vert", vert_shader);
     context.shaders.insert("frag", frag_shader);
     log!("Loaded shaders");
+
+    // Load textures
+    let diffuse_bytes = include_bytes!("../assets/textures/cookie.png");
+    let diffuse_image = image::load_from_memory(diffuse_bytes).unwrap();
+    let _diffuse_rgba = diffuse_image.to_rgba8();
+
+    use image::GenericImageView;
+    let _dimensions = diffuse_image.dimensions();
 
     // Run program
     let mut runtime = Runtime::new(context, window, dom);
