@@ -1,7 +1,9 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, io::BufReader, path::Path};
 
 use gloo_console::log;
-use wgpu::ShaderModule;
+use std::fs::File;
+use std::io::Read;
+use wgpu::{Sampler, ShaderModule, Texture, TextureView};
 use winit::window::Window;
 
 use crate::sim::State;
@@ -14,7 +16,8 @@ pub struct WgpuContext {
     pub queue: wgpu::Queue,
     pub config: wgpu::SurfaceConfiguration,
     pub size: winit::dpi::PhysicalSize<u32>,
-    pub shaders: HashMap<&'static str, ShaderModule>,
+    shaders: HashMap<&'static str, ShaderModule>,
+    textures: HashMap<&'static str, (Texture, TextureView, Sampler)>,
 }
 
 impl WgpuContext {
@@ -70,6 +73,7 @@ impl WgpuContext {
             config,
             size,
             shaders: HashMap::new(),
+            textures: HashMap::new(),
         }
     }
 
@@ -146,5 +150,86 @@ impl WgpuContext {
         output.present();
 
         Ok(())
+    }
+
+    pub fn add_shader<P: AsRef<Path>>(&mut self, name: &'static str, path: P) {
+        let path = path.as_ref().to_str().expect("Path not found");
+
+        let shader_module =
+            self.device
+                .create_shader_module(wgpu::ShaderModuleDescriptor {
+                    label: Some(name),
+                    source: wgpu::ShaderSource::Wgsl(
+                        std::fs::read_to_string(path).unwrap().into(),
+                    ),
+                });
+
+        self.shaders.insert(name, shader_module);
+    }
+
+    pub fn add_texture<P: AsRef<Path>>(&mut self, name: &'static str, path: P) {
+        let f = File::open(path).expect("Can't open texture file");
+        let mut reader = BufReader::new(f);
+        let mut bytes = Vec::new();
+
+        // Read file into vector.
+        reader
+            .read_to_end(&mut bytes)
+            .expect("Can't read texture data from file");
+
+        let image = image::load_from_memory(&bytes).unwrap();
+        let rgba = image.to_rgba8();
+
+        use image::GenericImageView;
+        let dimensions = image.dimensions();
+
+        let texture_size = wgpu::Extent3d {
+            width: dimensions.0,
+            height: dimensions.1,
+            depth_or_array_layers: 1,
+        };
+        let texture = self.device.create_texture(&wgpu::TextureDescriptor {
+            size: texture_size,
+            mip_level_count: 1,
+            sample_count: 1,
+            dimension: wgpu::TextureDimension::D2,
+            format: wgpu::TextureFormat::Rgba8UnormSrgb,
+            usage: wgpu::TextureUsages::TEXTURE_BINDING
+                | wgpu::TextureUsages::COPY_DST,
+            label: Some(name),
+        });
+
+        self.queue.write_texture(
+            // Tells wgpu where to copy the pixel data
+            wgpu::ImageCopyTexture {
+                texture: &texture,
+                mip_level: 0,
+                origin: wgpu::Origin3d::ZERO,
+                aspect: wgpu::TextureAspect::All,
+            },
+            // The actual pixel data
+            &rgba,
+            // The layout of the texture
+            wgpu::ImageDataLayout {
+                offset: 0,
+                bytes_per_row: std::num::NonZeroU32::new(4 * dimensions.0),
+                rows_per_image: std::num::NonZeroU32::new(dimensions.1),
+            },
+            texture_size,
+        );
+
+        let texture_view =
+            texture.create_view(&wgpu::TextureViewDescriptor::default());
+        let sampler = self.device.create_sampler(&wgpu::SamplerDescriptor {
+            address_mode_u: wgpu::AddressMode::ClampToEdge,
+            address_mode_v: wgpu::AddressMode::ClampToEdge,
+            address_mode_w: wgpu::AddressMode::ClampToEdge,
+            mag_filter: wgpu::FilterMode::Linear,
+            min_filter: wgpu::FilterMode::Nearest,
+            mipmap_filter: wgpu::FilterMode::Nearest,
+            ..Default::default()
+        });
+
+        self.textures.insert(name, (texture, texture_view, sampler));
     }
 }
