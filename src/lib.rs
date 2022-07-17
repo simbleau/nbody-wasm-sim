@@ -41,11 +41,12 @@ pub async fn run() {
     log!("Acquired graphics context");
 
     // Load shaders
-    context.add_shader("vert", "../assets/shaders/vert.wgsl");
-    context.add_shader("frag", "../assets/shaders/frag.wgsl");
+    context.add_shader("vert", include_str!("../assets/shaders/vert.wgsl"));
+    context.add_shader("frag", include_str!("../assets/shaders/frag.wgsl"));
     log!("Loaded shaders");
 
-    context.add_texture("cookie", "../assets/textures/cookie.png");
+    context
+        .add_texture("cookie", include_bytes!("../assets/textures/cookie.png"));
 
     // Run program
     let mut runtime = Runtime::new(context, window, dom);

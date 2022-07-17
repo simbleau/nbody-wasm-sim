@@ -1,9 +1,7 @@
-use std::{collections::HashMap, io::BufReader, path::Path};
+use std::collections::HashMap;
 
 use gloo_console::log;
-use std::fs::File;
-use std::io::Read;
-use wgpu::{Sampler, ShaderModule, Texture, TextureView};
+use wgpu::{BindGroup, ShaderModule, Texture};
 use winit::window::Window;
 
 use crate::sim::State;
@@ -17,7 +15,7 @@ pub struct WgpuContext {
     pub config: wgpu::SurfaceConfiguration,
     pub size: winit::dpi::PhysicalSize<u32>,
     shaders: HashMap<&'static str, ShaderModule>,
-    textures: HashMap<&'static str, (Texture, TextureView, Sampler)>,
+    textures: HashMap<&'static str, (Texture, BindGroup)>,
 }
 
 impl WgpuContext {
@@ -152,32 +150,21 @@ impl WgpuContext {
         Ok(())
     }
 
-    pub fn add_shader<P: AsRef<Path>>(&mut self, name: &'static str, path: P) {
-        let path = path.as_ref().to_str().expect("Path not found");
-
+    pub fn add_shader(&mut self, name: &'static str, source: &'static str) {
         let shader_module =
             self.device
                 .create_shader_module(wgpu::ShaderModuleDescriptor {
                     label: Some(name),
                     source: wgpu::ShaderSource::Wgsl(
-                        std::fs::read_to_string(path).unwrap().into(),
+                        std::borrow::Cow::Borrowed(source),
                     ),
                 });
 
         self.shaders.insert(name, shader_module);
     }
 
-    pub fn add_texture<P: AsRef<Path>>(&mut self, name: &'static str, path: P) {
-        let f = File::open(path).expect("Can't open texture file");
-        let mut reader = BufReader::new(f);
-        let mut bytes = Vec::new();
-
-        // Read file into vector.
-        reader
-            .read_to_end(&mut bytes)
-            .expect("Can't read texture data from file");
-
-        let image = image::load_from_memory(&bytes).unwrap();
+    pub fn add_texture(&mut self, name: &'static str, bytes: &'static [u8]) {
+        let image = image::load_from_memory(bytes).unwrap();
         let rgba = image.to_rgba8();
 
         use image::GenericImageView;
@@ -230,6 +217,66 @@ impl WgpuContext {
             ..Default::default()
         });
 
-        self.textures.insert(name, (texture, texture_view, sampler));
+        let texture_bind_group_layout = self.device.create_bind_group_layout(
+            &wgpu::BindGroupLayoutDescriptor {
+                entries: &[
+                    wgpu::BindGroupLayoutEntry {
+                        binding: 0,
+                        visibility: wgpu::ShaderStages::FRAGMENT,
+                        ty: wgpu::BindingType::Texture {
+                            multisampled: false,
+                            view_dimension: wgpu::TextureViewDimension::D2,
+                            sample_type: wgpu::TextureSampleType::Float {
+                                filterable: true,
+                            },
+                        },
+                        count: None,
+                    },
+                    wgpu::BindGroupLayoutEntry {
+                        binding: 1,
+                        visibility: wgpu::ShaderStages::FRAGMENT,
+                        // This should match the filterable field of the
+                        // corresponding Texture entry above.
+                        ty: wgpu::BindingType::Sampler(
+                            wgpu::SamplerBindingType::Filtering,
+                        ),
+                        count: None,
+                    },
+                ],
+                label: Some(name),
+            },
+        );
+
+        let bind_group =
+            self.device.create_bind_group(&wgpu::BindGroupDescriptor {
+                layout: &texture_bind_group_layout,
+                entries: &[
+                    wgpu::BindGroupEntry {
+                        binding: 0,
+                        resource: wgpu::BindingResource::TextureView(
+                            &texture_view,
+                        ),
+                    },
+                    wgpu::BindGroupEntry {
+                        binding: 1,
+                        resource: wgpu::BindingResource::Sampler(&sampler),
+                    },
+                ],
+                label: Some(name),
+            });
+
+        self.textures.insert(name, (texture, bind_group));
+    }
+
+    pub fn get_shader(&self, name: &'static str) -> &ShaderModule {
+        self.shaders
+            .get(name)
+            .expect(&format!("No shader with name '{}'", name))
+    }
+
+    pub fn get_texture(&self, name: &'static str) -> &(Texture, BindGroup) {
+        self.textures
+            .get(name)
+            .expect(&format!("No texture with name '{}'", name))
     }
 }

@@ -3,8 +3,8 @@ use crate::gpu_primitives::{GpuPrimitive, GpuTriangle};
 pub(crate) fn get(
     context: &crate::render::WgpuContext,
 ) -> wgpu::RenderPipeline {
-    let vert_shader = context.shaders.get("vert").unwrap();
-    let frag_shader = context.shaders.get("frag").unwrap();
+    let vert_shader = context.get_shader("vert");
+    let frag_shader = context.get_shader("frag");
 
     let pipeline_layout = context.device.create_pipeline_layout(
         &wgpu::PipelineLayoutDescriptor {
