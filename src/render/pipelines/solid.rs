@@ -1,24 +1,18 @@
+use wgpu::PipelineLayout;
+
 use crate::gpu_primitives::{GpuPrimitive, GpuTriangle};
 
 pub(crate) fn get(
     context: &crate::render::WgpuContext,
+    layout: PipelineLayout,
 ) -> wgpu::RenderPipeline {
     let vert_shader = context.get_shader("vert");
     let frag_shader = context.get_shader("frag");
 
-    let (_, _, bind_group_layout) = context.get_texture("cookie");
-    let pipeline_layout = context.device.create_pipeline_layout(
-        &wgpu::PipelineLayoutDescriptor {
-            label: Some("Render Pipeline Layout"),
-            bind_group_layouts: &[bind_group_layout],
-            push_constant_ranges: &[],
-        },
-    );
-
     let pipeline = context.device.create_render_pipeline(
         &wgpu::RenderPipelineDescriptor {
             label: Some("Solid Pipeline"),
-            layout: Some(&pipeline_layout),
+            layout: Some(&layout),
             vertex: wgpu::VertexState {
                 module: &vert_shader,
                 entry_point: "vs_main",

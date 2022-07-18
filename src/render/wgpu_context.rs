@@ -4,9 +4,8 @@ use gloo_console::log;
 use wgpu::{BindGroup, BindGroupLayout, ShaderModule, Texture};
 use winit::window::Window;
 
+use super::{frame_descriptor::FrameDescriptor, pipelines::Pipeline};
 use crate::sim::State;
-
-use super::{frame_descriptor::FrameDescriptor, pipelines};
 
 pub struct WgpuContext {
     pub surface: wgpu::Surface,
@@ -101,20 +100,37 @@ impl WgpuContext {
         let frame_desc = FrameDescriptor::from(&state);
         let vertex_buffer = frame_desc.get_vertex_buffer(&self.device);
         let index_buffer = frame_desc.get_index_buffer(&self.device);
-        {
-            let pipeline = match &state.wireframe {
-                true => pipelines::Pipeline::Wireframe,
-                false => pipelines::Pipeline::Solid,
+        let pipeline = match &state.wireframe {
+            true => {
+                let pipeline_layout = self.device.create_pipeline_layout(
+                    &wgpu::PipelineLayoutDescriptor {
+                        label: Some("Solid Pipeline Layout"),
+                        bind_group_layouts: &[],
+                        push_constant_ranges: &[],
+                    },
+                );
+                Pipeline::Wireframe.get(self, pipeline_layout)
             }
-            .get(self);
+            false => {
+                let (_, _, bind_group_layout) = self.get_texture("cookie");
+                let pipeline_layout = self.device.create_pipeline_layout(
+                    &wgpu::PipelineLayoutDescriptor {
+                        label: Some("Wireframe Pipeline Layout"),
+                        bind_group_layouts: &[bind_group_layout],
+                        push_constant_ranges: &[],
+                    },
+                );
+                Pipeline::Solid.get(self, pipeline_layout)
+            }
+        };
 
-            let color = wgpu::Color {
-                r: state.bg_color.x,
-                g: state.bg_color.y,
-                b: state.bg_color.z,
-                a: 1.0,
-            };
-
+        let clear_color = wgpu::Color {
+            r: state.bg_color.x,
+            g: state.bg_color.y,
+            b: state.bg_color.z,
+            a: 1.0,
+        };
+        {
             let mut pass =
                 encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                     label: Some("Render Pass"),
@@ -123,7 +139,7 @@ impl WgpuContext {
                             view: &view,
                             resolve_target: None,
                             ops: wgpu::Operations {
-                                load: wgpu::LoadOp::Clear(color),
+                                load: wgpu::LoadOp::Clear(clear_color),
                                 store: true,
                             },
                         },
