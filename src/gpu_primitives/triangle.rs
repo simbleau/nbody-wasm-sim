@@ -12,7 +12,7 @@ impl GpuPrimitive for GpuTriangle {
     }
 
     fn desc<'a>() -> wgpu::VertexBufferLayout<'a> {
-        GpuVertex::BUFFER_LAYOUT
+        GpuVertex::desc()
     }
 }
 

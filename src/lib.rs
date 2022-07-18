@@ -43,6 +43,14 @@ pub async fn run() {
     // Load shaders
     context.add_shader("vert", include_str!("../assets/shaders/vert.wgsl"));
     context.add_shader("frag", include_str!("../assets/shaders/frag.wgsl"));
+    context.add_shader(
+        "wireframe.vert",
+        include_str!("../assets/shaders/wireframe.vert.wgsl"),
+    );
+    context.add_shader(
+        "wireframe.frag",
+        include_str!("../assets/shaders/wireframe.frag.wgsl"),
+    );
     log!("Loaded shaders");
 
     context
