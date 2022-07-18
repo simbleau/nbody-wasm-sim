@@ -16,6 +16,6 @@ var texture_sampler: sampler;
 @fragment
 fn fs_main(in: Input) -> Output {
     var out: Output;
-    out.color = textureSample(texture, texture_sampler, in.uv);
+    out.color = textureSample(texture, texture_sampler, vec2<f32>(in.uv.x, 1.0 - in.uv.y));
     return out;
 }

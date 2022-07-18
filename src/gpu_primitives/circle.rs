@@ -28,3 +28,6 @@ impl GpuPrimitive for GpuCircle {
         Self::BUFFER_LAYOUT
     }
 }
+
+unsafe impl bytemuck::Pod for GpuCircle {}
+unsafe impl bytemuck::Zeroable for GpuCircle {}

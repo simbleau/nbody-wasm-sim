@@ -131,8 +131,10 @@ impl WgpuContext {
                     depth_stencil_attachment: None,
                 });
             pass.set_pipeline(&pipeline);
-            let (_, bind_group, _) = self.get_texture("cookie");
-            pass.set_bind_group(0, bind_group, &[]);
+            if !state.wireframe {
+                let (_, bind_group, _) = self.get_texture("cookie");
+                pass.set_bind_group(0, bind_group, &[]);
+            }
             pass.set_vertex_buffer(0, vertex_buffer.slice(..));
             pass.set_index_buffer(
                 index_buffer.slice(..),
