@@ -100,6 +100,7 @@ impl WgpuContext {
         let frame_desc = FrameDescriptor::from(&state);
         let vertex_buffer = frame_desc.get_vertex_buffer(&self.device);
         let index_buffer = frame_desc.get_index_buffer(&self.device);
+        let (_, bind_group, bind_group_layout) = self.get_texture(state.texture_key);
         let pipeline = match &state.wireframe {
             true => {
                 let pipeline_layout = self.device.create_pipeline_layout(
@@ -112,7 +113,6 @@ impl WgpuContext {
                 Pipeline::Wireframe.get(self, pipeline_layout)
             }
             false => {
-                let (_, _, bind_group_layout) = self.get_texture("cookie");
                 let pipeline_layout = self.device.create_pipeline_layout(
                     &wgpu::PipelineLayoutDescriptor {
                         label: Some("Wireframe Pipeline Layout"),
@@ -148,7 +148,6 @@ impl WgpuContext {
                 });
             pass.set_pipeline(&pipeline);
             if !state.wireframe {
-                let (_, bind_group, _) = self.get_texture("cookie");
                 pass.set_bind_group(0, bind_group, &[]);
             }
             pass.set_vertex_buffer(0, vertex_buffer.slice(..));
@@ -295,9 +294,9 @@ impl WgpuContext {
             .expect(&format!("No shader with name '{}'", name))
     }
 
-    pub fn get_texture(
+    pub fn get_texture<'a>(
         &self,
-        name: &'static str,
+        name: &'a str,
     ) -> &(Texture, BindGroup, BindGroupLayout) {
         self.textures
             .get(name)
