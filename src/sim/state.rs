@@ -4,7 +4,7 @@ use winit::event::{ElementState, VirtualKeyCode, WindowEvent};
 
 use super::Body;
 
-pub struct State {
+pub struct State<'a> {
     pub mouse_pos: DVec2,
     pub window_size: UVec2,
     pub last_frame: Option<Instant>,
@@ -12,9 +12,10 @@ pub struct State {
     pub wireframe: bool,
     pub paused: bool,
     pub bg_color: DVec3,
+    pub texture_key: &'a str,
 }
 
-impl Default for State {
+impl<'a> Default for State<'a> {
     fn default() -> Self {
         Self {
             mouse_pos: DVec2::default(),
@@ -24,11 +25,12 @@ impl Default for State {
             wireframe: false,
             paused: false,
             bg_color: DVec3::default(),
+            texture_key: "moon",
         }
     }
 }
 
-impl State {
+impl<'a> State<'a> {
     pub fn input(&mut self, event: &WindowEvent) {
         // We have no events to handle currently
         match event {
@@ -43,6 +45,15 @@ impl State {
                     && input.state == ElementState::Released =>
             {
                 self.wireframe = !self.wireframe;
+            }
+            WindowEvent::KeyboardInput { input, .. }
+            if input.virtual_keycode == Some(VirtualKeyCode::T)
+                && input.state == ElementState::Released =>
+            {
+                self.texture_key = match self.texture_key {
+                    "moon" => { "cookie" },
+                    _ => { "moon" }
+                };
             }
             WindowEvent::CursorMoved { position, .. } => {
                 self.mouse_pos = DVec2::new(position.x, position.y);

@@ -56,6 +56,9 @@ pub async fn run() {
     context
         .add_texture("cookie", include_bytes!("../assets/textures/cookie.png"));
 
+    context
+        .add_texture("moon", include_bytes!("../assets/textures/moon.jpg"));
+
     // Run program
     let mut runtime = Runtime::new(context, window, dom);
     log!("Starting...");

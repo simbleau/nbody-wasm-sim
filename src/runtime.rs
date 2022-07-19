@@ -7,14 +7,14 @@ use crate::dom::Dom;
 use crate::render::WgpuContext;
 use crate::sim::State;
 
-pub struct Runtime {
+pub struct Runtime<'a> {
     context: WgpuContext,
     window: Window,
     dom: Dom,
-    state: State,
+    state: State<'a>,
 }
 
-impl Runtime {
+impl Runtime<'_> {
     pub fn new(context: WgpuContext, window: Window, dom: Dom) -> Self {
         Self {
             context,
