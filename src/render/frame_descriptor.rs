@@ -1,10 +1,13 @@
 use wgpu::{util::DeviceExt, Buffer, Device};
 
-use crate::{gpu_primitives::GpuTriangle, sim::State};
+use crate::{gpu_primitives::GpuTriangle, sim::{State, WORLD_SIZE}};
+
+use super::camera::{Camera};
 
 pub struct FrameDescriptor {
     wireframe: bool,
     gpu_triangles: Vec<GpuTriangle>,
+    camera: Camera,
 }
 
 impl FrameDescriptor {
@@ -15,9 +18,12 @@ impl FrameDescriptor {
             gpu_triangles.push(body.into())
         }
 
+        let camera = Camera::new(state.window_size.as_vec2(), WORLD_SIZE, state.pan, state.zoom);
+
         FrameDescriptor {
             wireframe: state.wireframe,
             gpu_triangles,
+            camera,
         }
     }
 

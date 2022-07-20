@@ -1,8 +1,10 @@
-use glam::{DVec2, DVec3, UVec2};
+use glam::{DVec2, DVec3, UVec2, Vec2};
 use instant::Instant;
 use winit::event::{ElementState, VirtualKeyCode, WindowEvent};
 
 use super::Body;
+
+pub const WORLD_SIZE: Vec2 = Vec2::new(1024., 1024.);
 
 pub struct State<'a> {
     pub mouse_pos: DVec2,
@@ -13,6 +15,8 @@ pub struct State<'a> {
     pub paused: bool,
     pub bg_color: DVec3,
     pub texture_key: &'a str,
+    pub pan: Vec2,
+    pub zoom: f32,
 }
 
 impl<'a> Default for State<'a> {
@@ -26,11 +30,25 @@ impl<'a> Default for State<'a> {
             paused: false,
             bg_color: DVec3::default(),
             texture_key: "moon",
+            pan: Vec2::ZERO,
+            zoom: 1.0,
         }
     }
 }
 
 impl<'a> State<'a> {
+    pub fn new(view_size: Vec2) -> Self {
+        Self {
+            pan: WORLD_SIZE / 2.0,
+            zoom: if (view_size.y - WORLD_SIZE.y).abs() < (view_size.x / WORLD_SIZE.x).abs() {
+                view_size.y / WORLD_SIZE.y 
+            } else {
+                view_size.x / WORLD_SIZE.x
+            },
+            ..Default::default()
+        }
+    }
+
     pub fn input(&mut self, event: &WindowEvent) {
         // We have no events to handle currently
         match event {
@@ -77,10 +95,6 @@ impl<'a> State<'a> {
             Some(last_frame) => {
                 let now = Instant::now();
                 let dt = now - last_frame;
-
-                // Update background color
-                self.bg_color =
-                    (self.mouse_pos / self.window_size.as_dvec2()).extend(0.0);
 
                 // Simulation logic
                 let dt_f32 = dt.as_secs_f32();
