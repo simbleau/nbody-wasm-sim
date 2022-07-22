@@ -4,11 +4,11 @@ use winit::event::{ElementState, VirtualKeyCode, WindowEvent};
 
 use super::Body;
 
-pub const WORLD_SIZE: Vec2 = Vec2::new(1024., 1024.);
+pub const INITIAL_VIEW_BOUNDS: Vec2 = Vec2::new(3., 3.);
 
 pub struct State<'a> {
     pub mouse_pos: DVec2,
-    pub window_size: UVec2,
+    pub view_size: UVec2,
     pub last_frame: Option<Instant>,
     pub bodies: Vec<Body>,
     pub wireframe: bool,
@@ -16,6 +16,7 @@ pub struct State<'a> {
     pub bg_color: DVec3,
     pub texture_key: &'a str,
     pub pan: Vec2,
+    pub rotation: f32,
     pub zoom: f32,
 }
 
@@ -23,7 +24,7 @@ impl<'a> Default for State<'a> {
     fn default() -> Self {
         Self {
             mouse_pos: DVec2::default(),
-            window_size: UVec2::default(),
+            view_size: UVec2::default(),
             last_frame: None,
             bodies: vec![Body::default()],
             wireframe: false,
@@ -31,6 +32,7 @@ impl<'a> Default for State<'a> {
             bg_color: DVec3::default(),
             texture_key: "moon",
             pan: Vec2::ZERO,
+            rotation: 0.0,
             zoom: 100.0,
         }
     }
@@ -39,13 +41,13 @@ impl<'a> Default for State<'a> {
 impl<'a> State<'a> {
     pub fn new(view_size: Vec2) -> Self {
         Self {
-            pan: WORLD_SIZE / 2.0,
-            zoom: if (view_size.y - WORLD_SIZE.y).abs()
-                < (view_size.x / WORLD_SIZE.x).abs()
+            pan: Vec2::new(0., 0.),
+            zoom: if (view_size.y - INITIAL_VIEW_BOUNDS.y).abs()
+                < (view_size.x / INITIAL_VIEW_BOUNDS.x).abs()
             {
-                view_size.y / WORLD_SIZE.y
+                view_size.y / INITIAL_VIEW_BOUNDS.y
             } else {
-                view_size.x / WORLD_SIZE.x
+                view_size.x / INITIAL_VIEW_BOUNDS.x
             },
             ..Default::default()
         }
@@ -54,6 +56,50 @@ impl<'a> State<'a> {
     pub fn input(&mut self, event: &WindowEvent) {
         // We have no events to handle currently
         match event {
+            // Rotation
+            WindowEvent::KeyboardInput { input, .. }
+                if input.virtual_keycode == Some(VirtualKeyCode::Left) =>
+            {
+                self.rotation += 0.1;
+            }
+            WindowEvent::KeyboardInput { input, .. }
+                if input.virtual_keycode == Some(VirtualKeyCode::Right) =>
+            {
+                self.rotation -= 0.1;
+            }
+            // Scale
+            WindowEvent::KeyboardInput { input, .. }
+                if input.virtual_keycode == Some(VirtualKeyCode::Up) =>
+            {
+                self.zoom += self.zoom * 0.1;
+            }
+            WindowEvent::KeyboardInput { input, .. }
+                if input.virtual_keycode == Some(VirtualKeyCode::Down) =>
+            {
+                self.zoom -= self.zoom * 0.1;
+            }
+            // Translation
+            WindowEvent::KeyboardInput { input, .. }
+                if input.virtual_keycode == Some(VirtualKeyCode::W) =>
+            {
+                self.pan.y -= 0.2;
+            }
+            WindowEvent::KeyboardInput { input, .. }
+                if input.virtual_keycode == Some(VirtualKeyCode::A) =>
+            {
+                self.pan.x -= 0.2;
+            }
+            WindowEvent::KeyboardInput { input, .. }
+                if input.virtual_keycode == Some(VirtualKeyCode::S) =>
+            {
+                self.pan.y += 0.2;
+            }
+            WindowEvent::KeyboardInput { input, .. }
+                if input.virtual_keycode == Some(VirtualKeyCode::D) =>
+            {
+                self.pan.x += 0.2;
+            }
+            // Change sim visuals
             WindowEvent::KeyboardInput { input, .. }
                 if input.virtual_keycode == Some(VirtualKeyCode::Space)
                     && input.state == ElementState::Released =>
@@ -61,13 +107,13 @@ impl<'a> State<'a> {
                 self.paused = !self.paused;
             }
             WindowEvent::KeyboardInput { input, .. }
-                if input.virtual_keycode == Some(VirtualKeyCode::W)
+                if input.virtual_keycode == Some(VirtualKeyCode::Q)
                     && input.state == ElementState::Released =>
             {
                 self.wireframe = !self.wireframe;
             }
             WindowEvent::KeyboardInput { input, .. }
-                if input.virtual_keycode == Some(VirtualKeyCode::T)
+                if input.virtual_keycode == Some(VirtualKeyCode::E)
                     && input.state == ElementState::Released =>
             {
                 self.texture_key = match self.texture_key {
@@ -79,7 +125,7 @@ impl<'a> State<'a> {
                 self.mouse_pos = DVec2::new(position.x, position.y);
             }
             WindowEvent::Resized(size) => {
-                self.window_size = UVec2::new(size.width, size.height);
+                self.view_size = UVec2::new(size.width, size.height);
             }
             _ => {}
         }

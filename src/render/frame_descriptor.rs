@@ -1,9 +1,8 @@
-use glam::Vec2Swizzles;
 use wgpu::{util::DeviceExt, BindGroup, BindGroupLayout, Buffer, Device};
 
 use crate::{
     gpu_primitives::{CameraUniform, GpuTriangle},
-    sim::{State, WORLD_SIZE},
+    sim::State,
 };
 
 use super::camera::Camera;
@@ -23,19 +22,18 @@ impl FrameDescriptor {
         }
 
         let camera = Camera::new(
-            state.window_size.as_vec2(),
-            WORLD_SIZE,
+            state.view_size.as_vec2(),
+            state.rotation,
             state.pan,
             state.zoom,
         );
-        //gloo_console::log!(
-        //    "view",
-        //    state.window_size.as_vec2().x,
-        //    state.window_size.as_vec2().y
-        //);
-        //gloo_console::log!("world", WORLD_SIZE.x, WORLD_SIZE.y);
-        //gloo_console::log!("translation", state.pan.x, state.pan.y);
-        //gloo_console::log!("scale", state.zoom);
+        gloo_console::log!(
+            "view",
+            state.view_size.as_vec2().x,
+            state.view_size.as_vec2().y
+        );
+        gloo_console::log!("translation", state.pan.x, state.pan.y);
+        gloo_console::log!("scale", state.zoom);
 
         FrameDescriptor {
             wireframe: state.wireframe,
@@ -118,6 +116,7 @@ impl FrameDescriptor {
             .camera
             .build_view_projection_matrix()
             .to_cols_array_2d();
+        gloo_console::log!("matrix", format!("{:#?}", matrix));
         let camera_uniform = CameraUniform { view_proj: matrix };
         bytemuck::cast_slice(&[camera_uniform]).to_vec()
     }

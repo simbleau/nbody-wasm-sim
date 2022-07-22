@@ -1,3 +1,4 @@
+use glam::Vec2;
 use winit::event::Event;
 use winit::event::WindowEvent;
 use winit::event_loop::{ControlFlow, EventLoopWindowTarget};
@@ -16,11 +17,15 @@ pub struct Runtime<'a> {
 
 impl Runtime<'_> {
     pub fn new(context: WgpuContext, window: Window, dom: Dom) -> Self {
+        let view_size = Vec2::new(
+            window.inner_size().width as f32,
+            window.inner_size().height as f32,
+        );
         Self {
             context,
             window,
             dom,
-            state: State::default(),
+            state: State::new(view_size),
         }
     }
 

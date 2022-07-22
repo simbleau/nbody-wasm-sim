@@ -7,7 +7,7 @@ mod sim;
 use gloo_console::log;
 use render::WgpuContext;
 use wasm_bindgen::prelude::*;
-use winit::dpi::PhysicalSize;
+use winit::dpi::LogicalSize;
 use winit::platform::web::WindowBuilderExtWebSys;
 use winit::{event_loop::EventLoop, window::WindowBuilder};
 
@@ -30,7 +30,7 @@ pub async fn run() {
         .build(&event_loop)
         .and_then(|w| {
             // Set attributes
-            w.set_inner_size(PhysicalSize::new(600.0, 400.0));
+            w.set_inner_size(LogicalSize::new(600.0, 400.0));
             Ok(w)
         })
         .expect("Could not build window");
