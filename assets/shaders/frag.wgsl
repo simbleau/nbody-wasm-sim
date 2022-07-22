@@ -7,9 +7,9 @@ struct Output {
     @location(0) color: vec4<f32>,
 };
 
-@group(0) @binding(0)
+@group(1) @binding(0)
 var texture: texture_2d<f32>;
-@group(0)@binding(1)
+@group(1) @binding(1)
 var texture_sampler: sampler;
 
 // Fragment shader

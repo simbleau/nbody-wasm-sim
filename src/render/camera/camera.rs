@@ -23,7 +23,7 @@ impl Camera {
         }
     }
 
-    fn build_view_projection_matrix(&self) -> Mat4 {
+    pub fn build_view_projection_matrix(&self) -> Mat4 {
         let view = Mat4::from_scale_rotation_translation(
             Vec3::splat(self.scale),
             Quat::IDENTITY,
