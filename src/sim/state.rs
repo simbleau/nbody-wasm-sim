@@ -4,11 +4,11 @@ use winit::event::{ElementState, VirtualKeyCode, WindowEvent};
 
 use super::Body;
 
-pub const WORLD_SIZE: Vec2 = Vec2::new(1024., 1024.);
+pub const INITIAL_VIEW_BOUNDS: Vec2 = Vec2::new(3., 3.);
 
 pub struct State<'a> {
     pub mouse_pos: DVec2,
-    pub window_size: UVec2,
+    pub view_size: UVec2,
     pub last_frame: Option<Instant>,
     pub bodies: Vec<Body>,
     pub wireframe: bool,
@@ -23,7 +23,7 @@ impl<'a> Default for State<'a> {
     fn default() -> Self {
         Self {
             mouse_pos: DVec2::default(),
-            window_size: UVec2::default(),
+            view_size: UVec2::default(),
             last_frame: None,
             bodies: vec![Body::default()],
             wireframe: false,
@@ -39,13 +39,13 @@ impl<'a> Default for State<'a> {
 impl<'a> State<'a> {
     pub fn new(view_size: Vec2) -> Self {
         Self {
-            pan: WORLD_SIZE / 2.0,
-            zoom: if (view_size.y - WORLD_SIZE.y).abs()
-                < (view_size.x / WORLD_SIZE.x).abs()
+            pan: Vec2::new(0., 0.),
+            zoom: if (view_size.y - INITIAL_VIEW_BOUNDS.y).abs()
+                < (view_size.x / INITIAL_VIEW_BOUNDS.x).abs()
             {
-                view_size.y / WORLD_SIZE.y
+                view_size.y / INITIAL_VIEW_BOUNDS.y
             } else {
-                view_size.x / WORLD_SIZE.x
+                view_size.x / INITIAL_VIEW_BOUNDS.x
             },
             ..Default::default()
         }
@@ -79,7 +79,7 @@ impl<'a> State<'a> {
                 self.mouse_pos = DVec2::new(position.x, position.y);
             }
             WindowEvent::Resized(size) => {
-                self.window_size = UVec2::new(size.width, size.height);
+                self.view_size = UVec2::new(size.width, size.height);
             }
             _ => {}
         }

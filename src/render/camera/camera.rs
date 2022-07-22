@@ -8,12 +8,7 @@ pub struct Camera {
 }
 
 impl Camera {
-    pub fn new(
-        view_size: Vec2,
-        world_size: Vec2,
-        translation: Vec2,
-        scale: f32,
-    ) -> Self {
+    pub fn new(view_size: Vec2, translation: Vec2, scale: f32) -> Self {
         Camera {
             scale,
             rotation: 0.0,
