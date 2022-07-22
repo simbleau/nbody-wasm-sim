@@ -16,6 +16,7 @@ pub struct State<'a> {
     pub bg_color: DVec3,
     pub texture_key: &'a str,
     pub pan: Vec2,
+    pub rotation: f32,
     pub zoom: f32,
 }
 
@@ -31,6 +32,7 @@ impl<'a> Default for State<'a> {
             bg_color: DVec3::default(),
             texture_key: "moon",
             pan: Vec2::ZERO,
+            rotation: 0.0,
             zoom: 100.0,
         }
     }
@@ -54,6 +56,50 @@ impl<'a> State<'a> {
     pub fn input(&mut self, event: &WindowEvent) {
         // We have no events to handle currently
         match event {
+            // Rotation
+            WindowEvent::KeyboardInput { input, .. }
+                if input.virtual_keycode == Some(VirtualKeyCode::Left) =>
+            {
+                self.rotation += 0.1;
+            }
+            WindowEvent::KeyboardInput { input, .. }
+                if input.virtual_keycode == Some(VirtualKeyCode::Right) =>
+            {
+                self.rotation -= 0.1;
+            }
+            // Scale
+            WindowEvent::KeyboardInput { input, .. }
+                if input.virtual_keycode == Some(VirtualKeyCode::Up) =>
+            {
+                self.zoom += self.zoom * 0.1;
+            }
+            WindowEvent::KeyboardInput { input, .. }
+                if input.virtual_keycode == Some(VirtualKeyCode::Down) =>
+            {
+                self.zoom -= self.zoom * 0.1;
+            }
+            // Translation
+            WindowEvent::KeyboardInput { input, .. }
+                if input.virtual_keycode == Some(VirtualKeyCode::W) =>
+            {
+                self.pan.y -= 0.2;
+            }
+            WindowEvent::KeyboardInput { input, .. }
+                if input.virtual_keycode == Some(VirtualKeyCode::A) =>
+            {
+                self.pan.x -= 0.2;
+            }
+            WindowEvent::KeyboardInput { input, .. }
+                if input.virtual_keycode == Some(VirtualKeyCode::S) =>
+            {
+                self.pan.y += 0.2;
+            }
+            WindowEvent::KeyboardInput { input, .. }
+                if input.virtual_keycode == Some(VirtualKeyCode::D) =>
+            {
+                self.pan.x += 0.2;
+            }
+            // Change sim visuals
             WindowEvent::KeyboardInput { input, .. }
                 if input.virtual_keycode == Some(VirtualKeyCode::Space)
                     && input.state == ElementState::Released =>
@@ -61,13 +107,13 @@ impl<'a> State<'a> {
                 self.paused = !self.paused;
             }
             WindowEvent::KeyboardInput { input, .. }
-                if input.virtual_keycode == Some(VirtualKeyCode::W)
+                if input.virtual_keycode == Some(VirtualKeyCode::Q)
                     && input.state == ElementState::Released =>
             {
                 self.wireframe = !self.wireframe;
             }
             WindowEvent::KeyboardInput { input, .. }
-                if input.virtual_keycode == Some(VirtualKeyCode::T)
+                if input.virtual_keycode == Some(VirtualKeyCode::E)
                     && input.state == ElementState::Released =>
             {
                 self.texture_key = match self.texture_key {

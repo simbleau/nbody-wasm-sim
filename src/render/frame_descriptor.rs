@@ -21,8 +21,12 @@ impl FrameDescriptor {
             gpu_triangles.push(body.into())
         }
 
-        let camera =
-            Camera::new(state.view_size.as_vec2(), state.pan, state.zoom);
+        let camera = Camera::new(
+            state.view_size.as_vec2(),
+            state.rotation,
+            state.pan,
+            state.zoom,
+        );
         gloo_console::log!(
             "view",
             state.view_size.as_vec2().x,
