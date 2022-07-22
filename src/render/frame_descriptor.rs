@@ -1,10 +1,17 @@
-use wgpu::{util::DeviceExt, Buffer, Device};
+use glam::Vec2Swizzles;
+use wgpu::{util::DeviceExt, BindGroup, BindGroupLayout, Buffer, Device};
 
-use crate::{gpu_primitives::GpuTriangle, sim::State};
+use crate::{
+    gpu_primitives::{CameraUniform, GpuTriangle},
+    sim::{State, WORLD_SIZE},
+};
+
+use super::camera::Camera;
 
 pub struct FrameDescriptor {
     wireframe: bool,
     gpu_triangles: Vec<GpuTriangle>,
+    camera: Camera,
 }
 
 impl FrameDescriptor {
@@ -15,9 +22,25 @@ impl FrameDescriptor {
             gpu_triangles.push(body.into())
         }
 
+        let camera = Camera::new(
+            state.window_size.as_vec2(),
+            WORLD_SIZE,
+            state.pan,
+            state.zoom,
+        );
+        //gloo_console::log!(
+        //    "view",
+        //    state.window_size.as_vec2().x,
+        //    state.window_size.as_vec2().y
+        //);
+        //gloo_console::log!("world", WORLD_SIZE.x, WORLD_SIZE.y);
+        //gloo_console::log!("translation", state.pan.x, state.pan.y);
+        //gloo_console::log!("scale", state.zoom);
+
         FrameDescriptor {
             wireframe: state.wireframe,
             gpu_triangles,
+            camera,
         }
     }
 
@@ -80,5 +103,57 @@ impl FrameDescriptor {
         }
 
         buf
+    }
+
+    pub fn get_camera_buffer(&self, device: &Device) -> Buffer {
+        device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("Camera Buffer"),
+            contents: &self.get_camera_buffer_contents(),
+            usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
+        })
+    }
+
+    pub fn get_camera_buffer_contents(&self) -> Vec<u8> {
+        let matrix = self
+            .camera
+            .build_view_projection_matrix()
+            .to_cols_array_2d();
+        let camera_uniform = CameraUniform { view_proj: matrix };
+        bytemuck::cast_slice(&[camera_uniform]).to_vec()
+    }
+
+    pub fn get_camera_bind_group_layout(
+        &self,
+        device: &Device,
+    ) -> BindGroupLayout {
+        device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+            entries: &[wgpu::BindGroupLayoutEntry {
+                binding: 0,
+                visibility: wgpu::ShaderStages::VERTEX,
+                ty: wgpu::BindingType::Buffer {
+                    ty: wgpu::BufferBindingType::Uniform,
+                    has_dynamic_offset: false,
+                    min_binding_size: None,
+                },
+                count: None,
+            }],
+            label: Some("Camera Bind Group Layout"),
+        })
+    }
+
+    pub fn get_camera_bind_group(
+        &self,
+        camera_buffer: &Buffer,
+        layout: &BindGroupLayout,
+        device: &Device,
+    ) -> BindGroup {
+        device.create_bind_group(&wgpu::BindGroupDescriptor {
+            layout,
+            entries: &[wgpu::BindGroupEntry {
+                binding: 0,
+                resource: camera_buffer.as_entire_binding(),
+            }],
+            label: Some("Camera Bind Group"),
+        })
     }
 }

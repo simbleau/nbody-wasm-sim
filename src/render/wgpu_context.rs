@@ -100,13 +100,22 @@ impl WgpuContext {
         let frame_desc = FrameDescriptor::from(&state);
         let vertex_buffer = frame_desc.get_vertex_buffer(&self.device);
         let index_buffer = frame_desc.get_index_buffer(&self.device);
-        let (_, bind_group, bind_group_layout) = self.get_texture(state.texture_key);
+        let camera_buffer = frame_desc.get_camera_buffer(&self.device);
+        let camera_bind_group_layout =
+            &frame_desc.get_camera_bind_group_layout(&self.device);
+        let camera_bind_group = &frame_desc.get_camera_bind_group(
+            &camera_buffer,
+            &camera_bind_group_layout,
+            &self.device,
+        );
+        let (_, tex_bind_group, tex_bind_group_layout) =
+            self.get_texture(state.texture_key);
         let pipeline = match &state.wireframe {
             true => {
                 let pipeline_layout = self.device.create_pipeline_layout(
                     &wgpu::PipelineLayoutDescriptor {
                         label: Some("Solid Pipeline Layout"),
-                        bind_group_layouts: &[],
+                        bind_group_layouts: &[camera_bind_group_layout],
                         push_constant_ranges: &[],
                     },
                 );
@@ -116,7 +125,10 @@ impl WgpuContext {
                 let pipeline_layout = self.device.create_pipeline_layout(
                     &wgpu::PipelineLayoutDescriptor {
                         label: Some("Wireframe Pipeline Layout"),
-                        bind_group_layouts: &[bind_group_layout],
+                        bind_group_layouts: &[
+                            camera_bind_group_layout,
+                            tex_bind_group_layout,
+                        ],
                         push_constant_ranges: &[],
                     },
                 );
@@ -147,8 +159,9 @@ impl WgpuContext {
                     depth_stencil_attachment: None,
                 });
             pass.set_pipeline(&pipeline);
+            pass.set_bind_group(0, camera_bind_group, &[]);
             if !state.wireframe {
-                pass.set_bind_group(0, bind_group, &[]);
+                pass.set_bind_group(1, tex_bind_group, &[]);
             }
             pass.set_vertex_buffer(0, vertex_buffer.slice(..));
             pass.set_index_buffer(
@@ -163,6 +176,11 @@ impl WgpuContext {
         }
 
         // Submit will accept anything that implements IntoIter
+        self.queue.write_buffer(
+            &camera_buffer,
+            0,
+            &frame_desc.get_camera_buffer_contents(),
+        );
         self.queue.submit(std::iter::once(encoder.finish()));
         output.present();
 

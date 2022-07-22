@@ -11,3 +11,6 @@ pub use triangle::GpuTriangle;
 
 mod circle;
 pub use circle::GpuCircle;
+
+mod camera;
+pub use camera::CameraUniform;
