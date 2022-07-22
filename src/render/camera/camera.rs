@@ -1,5 +1,4 @@
 use glam::{Mat4, Quat, Vec2, Vec3};
-use winit::window;
 
 pub struct Camera {
     scale: f32,

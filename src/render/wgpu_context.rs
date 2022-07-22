@@ -1,9 +1,7 @@
 use std::collections::HashMap;
 
 use gloo_console::log;
-use wgpu::{
-    util::RenderEncoder, BindGroup, BindGroupLayout, ShaderModule, Texture,
-};
+use wgpu::{BindGroup, BindGroupLayout, ShaderModule, Texture};
 use winit::window::Window;
 
 use super::{frame_descriptor::FrameDescriptor, pipelines::Pipeline};
@@ -178,6 +176,11 @@ impl WgpuContext {
         }
 
         // Submit will accept anything that implements IntoIter
+        self.queue.write_buffer(
+            &camera_buffer,
+            0,
+            &frame_desc.get_camera_buffer_contents(),
+        );
         self.queue.submit(std::iter::once(encoder.finish()));
         output.present();
 

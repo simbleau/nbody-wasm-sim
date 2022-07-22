@@ -31,7 +31,7 @@ impl<'a> Default for State<'a> {
             bg_color: DVec3::default(),
             texture_key: "moon",
             pan: Vec2::ZERO,
-            zoom: 1.0,
+            zoom: 100.0,
         }
     }
 }

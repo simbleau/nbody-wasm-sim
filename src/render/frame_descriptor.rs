@@ -1,3 +1,4 @@
+use glam::Vec2Swizzles;
 use wgpu::{util::DeviceExt, BindGroup, BindGroupLayout, Buffer, Device};
 
 use crate::{
@@ -27,6 +28,14 @@ impl FrameDescriptor {
             state.pan,
             state.zoom,
         );
+        //gloo_console::log!(
+        //    "view",
+        //    state.window_size.as_vec2().x,
+        //    state.window_size.as_vec2().y
+        //);
+        //gloo_console::log!("world", WORLD_SIZE.x, WORLD_SIZE.y);
+        //gloo_console::log!("translation", state.pan.x, state.pan.y);
+        //gloo_console::log!("scale", state.zoom);
 
         FrameDescriptor {
             wireframe: state.wireframe,
@@ -99,7 +108,7 @@ impl FrameDescriptor {
     pub fn get_camera_buffer(&self, device: &Device) -> Buffer {
         device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Camera Buffer"),
-            contents: &self.get_vertex_buffer_contents(),
+            contents: &self.get_camera_buffer_contents(),
             usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
         })
     }
@@ -109,7 +118,8 @@ impl FrameDescriptor {
             .camera
             .build_view_projection_matrix()
             .to_cols_array_2d();
-        bytemuck::cast_slice(&matrix).to_vec()
+        let camera_uniform = CameraUniform { view_proj: matrix };
+        bytemuck::cast_slice(&[camera_uniform]).to_vec()
     }
 
     pub fn get_camera_bind_group_layout(
