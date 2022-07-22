@@ -40,8 +40,10 @@ impl<'a> State<'a> {
     pub fn new(view_size: Vec2) -> Self {
         Self {
             pan: WORLD_SIZE / 2.0,
-            zoom: if (view_size.y - WORLD_SIZE.y).abs() < (view_size.x / WORLD_SIZE.x).abs() {
-                view_size.y / WORLD_SIZE.y 
+            zoom: if (view_size.y - WORLD_SIZE.y).abs()
+                < (view_size.x / WORLD_SIZE.x).abs()
+            {
+                view_size.y / WORLD_SIZE.y
             } else {
                 view_size.x / WORLD_SIZE.x
             },
@@ -65,12 +67,12 @@ impl<'a> State<'a> {
                 self.wireframe = !self.wireframe;
             }
             WindowEvent::KeyboardInput { input, .. }
-            if input.virtual_keycode == Some(VirtualKeyCode::T)
-                && input.state == ElementState::Released =>
+                if input.virtual_keycode == Some(VirtualKeyCode::T)
+                    && input.state == ElementState::Released =>
             {
                 self.texture_key = match self.texture_key {
-                    "moon" => { "cookie" },
-                    _ => { "moon" }
+                    "moon" => "cookie",
+                    _ => "moon",
                 };
             }
             WindowEvent::CursorMoved { position, .. } => {

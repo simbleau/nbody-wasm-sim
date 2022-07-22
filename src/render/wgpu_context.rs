@@ -100,7 +100,8 @@ impl WgpuContext {
         let frame_desc = FrameDescriptor::from(&state);
         let vertex_buffer = frame_desc.get_vertex_buffer(&self.device);
         let index_buffer = frame_desc.get_index_buffer(&self.device);
-        let (_, bind_group, bind_group_layout) = self.get_texture(state.texture_key);
+        let (_, bind_group, bind_group_layout) =
+            self.get_texture(state.texture_key);
         let pipeline = match &state.wireframe {
             true => {
                 let pipeline_layout = self.device.create_pipeline_layout(
