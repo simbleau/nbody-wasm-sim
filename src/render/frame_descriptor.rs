@@ -103,56 +103,10 @@ impl FrameDescriptor {
         buf
     }
 
-    pub fn get_camera_buffer(&self, device: &Device) -> Buffer {
-        device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: Some("Camera Buffer"),
-            contents: &self.get_camera_buffer_contents(),
-            usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
-        })
-    }
-
-    pub fn get_camera_buffer_contents(&self) -> Vec<u8> {
-        let matrix = self
-            .camera
-            .build_view_projection_matrix()
-            .to_cols_array_2d();
-        gloo_console::log!("matrix", format!("{:#?}", matrix));
-        let camera_uniform = CameraUniform { view_proj: matrix };
-        bytemuck::cast_slice(&[camera_uniform]).to_vec()
-    }
-
-    pub fn get_camera_bind_group_layout(
+    pub fn create_camera_binding(
         &self,
         device: &Device,
-    ) -> BindGroupLayout {
-        device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-            entries: &[wgpu::BindGroupLayoutEntry {
-                binding: 0,
-                visibility: wgpu::ShaderStages::VERTEX,
-                ty: wgpu::BindingType::Buffer {
-                    ty: wgpu::BufferBindingType::Uniform,
-                    has_dynamic_offset: false,
-                    min_binding_size: None,
-                },
-                count: None,
-            }],
-            label: Some("Camera Bind Group Layout"),
-        })
-    }
-
-    pub fn get_camera_bind_group(
-        &self,
-        camera_buffer: &Buffer,
-        layout: &BindGroupLayout,
-        device: &Device,
-    ) -> BindGroup {
-        device.create_bind_group(&wgpu::BindGroupDescriptor {
-            layout,
-            entries: &[wgpu::BindGroupEntry {
-                binding: 0,
-                resource: camera_buffer.as_entire_binding(),
-            }],
-            label: Some("Camera Bind Group"),
-        })
+    ) -> (Buffer, Vec<u8>, BindGroup, BindGroupLayout) {
+        self.camera.bind(device)
     }
 }

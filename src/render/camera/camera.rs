@@ -1,4 +1,7 @@
 use glam::{Mat4, Quat, Vec2};
+use wgpu::{util::DeviceExt, BindGroup, BindGroupLayout, Buffer, Device};
+
+use crate::gpu_primitives::CameraUniform;
 
 pub struct Camera {
     scale: f32,
@@ -46,5 +49,64 @@ impl Camera {
         );
 
         return proj * view.inverse();
+    }
+
+    pub fn bind(
+        &self,
+        device: &Device,
+    ) -> (Buffer, Vec<u8>, BindGroup, BindGroupLayout) {
+        let layout = self.create_bind_group_layout(device);
+        let buffer_contents = self.buffer_contents();
+        let buffer = self.create_buffer(device, &buffer_contents);
+        let bind_group = self.create_bind_group(&buffer, &layout, device);
+        (buffer, buffer_contents, bind_group, layout)
+    }
+
+    fn buffer_contents(&self) -> Vec<u8> {
+        // TODO: Store this in the camera
+        let matrix = self.build_view_projection_matrix().to_cols_array_2d();
+        gloo_console::log!("matrix", format!("{:#?}", matrix));
+        let camera_uniform = CameraUniform { view_proj: matrix };
+        bytemuck::cast_slice(&[camera_uniform]).to_vec()
+    }
+
+    fn create_bind_group(
+        &self,
+        buffer: &Buffer,
+        layout: &BindGroupLayout,
+        device: &Device,
+    ) -> BindGroup {
+        device.create_bind_group(&wgpu::BindGroupDescriptor {
+            layout,
+            entries: &[wgpu::BindGroupEntry {
+                binding: 0,
+                resource: buffer.as_entire_binding(),
+            }],
+            label: Some("Camera Bind Group"),
+        })
+    }
+
+    fn create_buffer(&self, device: &Device, buffer_contents: &[u8]) -> Buffer {
+        device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("Camera Buffer"),
+            contents: buffer_contents,
+            usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
+        })
+    }
+
+    fn create_bind_group_layout(&self, device: &Device) -> BindGroupLayout {
+        device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+            entries: &[wgpu::BindGroupLayoutEntry {
+                binding: 0,
+                visibility: wgpu::ShaderStages::VERTEX,
+                ty: wgpu::BindingType::Buffer {
+                    ty: wgpu::BufferBindingType::Uniform,
+                    has_dynamic_offset: false,
+                    min_binding_size: None,
+                },
+                count: None,
+            }],
+            label: Some("Camera Bind Group Layout"),
+        })
     }
 }

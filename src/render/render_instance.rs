@@ -7,7 +7,6 @@ pub struct RenderInstance {
     rotation: Quat,
 }
 
-// NEW!
 impl RenderInstance {
     fn to_raw(&self) -> InstanceRaw {
         InstanceRaw {
