@@ -14,3 +14,6 @@ pub use circle::GpuCircle;
 
 mod camera;
 pub use camera::CameraUniform;
+
+mod instance;
+pub use instance::InstanceRaw;

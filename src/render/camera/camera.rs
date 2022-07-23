@@ -1,4 +1,4 @@
-use glam::{Affine3A, Mat4, Quat, Vec2};
+use glam::{Mat4, Quat, Vec2};
 
 pub struct Camera {
     scale: f32,
@@ -23,10 +23,10 @@ impl Camera {
     }
 
     pub fn build_view_projection_matrix(&self) -> Mat4 {
-        let view = Mat4::from(Affine3A::from_rotation_translation(
+        let view = Mat4::from_rotation_translation(
             Quat::from_rotation_z(self.rotation),
             self.translation.extend(1.0),
-        ));
+        );
 
         let (width, height) = self.view_size.into();
         let half_width = width / 2.0;
