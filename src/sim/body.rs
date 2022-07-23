@@ -1,7 +1,5 @@
 use glam::Vec2;
 
-const WAVE_SPEED: f32 = 3.14 * 2.0;
-
 #[derive(Clone, Debug)]
 pub struct Body {
     pub origin: Vec2,
@@ -12,7 +10,7 @@ pub struct Body {
 impl Default for Body {
     fn default() -> Self {
         Body {
-            origin: Vec2::new(0.0, 0.0),
+            origin: Vec2::new(1.0, 1.0),
             geometry: Geometry::Triangle([
                 Vec2::new(0.0, 0.5),
                 Vec2::new(-0.5, -0.5),
@@ -28,8 +26,8 @@ impl Body {
         self.elapsed += dt;
 
         // Make the top vertex move in a circle
-        self.origin.x = (self.elapsed * WAVE_SPEED).cos() / 3.0;
-        self.origin.y = (self.elapsed * WAVE_SPEED).sin() / 3.0;
+        // self.origin.x = (self.elapsed * WAVE_SPEED).cos() / 3.0;
+        // self.origin.y = (self.elapsed * WAVE_SPEED).sin() / 3.0;
     }
 }
 
