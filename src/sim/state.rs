@@ -1,10 +1,11 @@
-use glam::{DVec2, DVec3, UVec2, Vec2};
+use glam::{DVec2, DVec3, Quat, UVec2, Vec2, Vec3, Vec3Swizzles};
 use instant::Instant;
 use winit::event::{ElementState, VirtualKeyCode, WindowEvent};
 
 use super::Body;
 
 pub const INITIAL_VIEW_BOUNDS: Vec2 = Vec2::new(3., 3.);
+pub const CAM_PAN_SPEED: f32 = 0.05;
 
 pub struct State<'a> {
     pub mouse_pos: DVec2,
@@ -82,22 +83,30 @@ impl<'a> State<'a> {
             WindowEvent::KeyboardInput { input, .. }
                 if input.virtual_keycode == Some(VirtualKeyCode::W) =>
             {
-                self.pan.y -= 0.2;
+                self.pan += (Quat::from_rotation_z(self.rotation)
+                    * (CAM_PAN_SPEED * Vec3::Y))
+                    .xy();
             }
             WindowEvent::KeyboardInput { input, .. }
                 if input.virtual_keycode == Some(VirtualKeyCode::A) =>
             {
-                self.pan.x -= 0.2;
+                self.pan -= (Quat::from_rotation_z(self.rotation)
+                    * (CAM_PAN_SPEED * Vec3::X))
+                    .xy();
             }
             WindowEvent::KeyboardInput { input, .. }
                 if input.virtual_keycode == Some(VirtualKeyCode::S) =>
             {
-                self.pan.y += 0.2;
+                self.pan -= (Quat::from_rotation_z(self.rotation)
+                    * (CAM_PAN_SPEED * Vec3::Y))
+                    .xy();
             }
             WindowEvent::KeyboardInput { input, .. }
                 if input.virtual_keycode == Some(VirtualKeyCode::D) =>
             {
-                self.pan.x += 0.2;
+                self.pan += (Quat::from_rotation_z(self.rotation)
+                    * (CAM_PAN_SPEED * Vec3::X))
+                    .xy();
             }
             // Change sim visuals
             WindowEvent::KeyboardInput { input, .. }
