@@ -97,6 +97,7 @@ impl WgpuContext {
             },
         );
 
+        // Create all data from the state we need for a frame
         let frame_desc = FrameDescriptor::from(&state);
         let vertex_buffer = frame_desc.get_vertex_buffer(&self.device);
         let index_buffer = frame_desc.get_index_buffer(&self.device);
@@ -108,6 +109,8 @@ impl WgpuContext {
         ) = frame_desc.create_camera_binding(&self.device);
         let (_, tex_bind_group, tex_bind_group_layout) =
             self.get_texture(state.texture_key);
+
+        // Get rendering pipeline
         let pipeline = match &state.wireframe {
             true => {
                 let pipeline_layout = self.device.create_pipeline_layout(
@@ -134,6 +137,7 @@ impl WgpuContext {
             }
         };
 
+        // Execute render pass
         {
             let mut pass =
                 encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
