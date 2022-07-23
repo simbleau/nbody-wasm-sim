@@ -134,12 +134,6 @@ impl WgpuContext {
             }
         };
 
-        let clear_color = wgpu::Color {
-            r: state.bg_color.x,
-            g: state.bg_color.y,
-            b: state.bg_color.z,
-            a: 1.0,
-        };
         {
             let mut pass =
                 encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
@@ -149,7 +143,9 @@ impl WgpuContext {
                             view: &view,
                             resolve_target: None,
                             ops: wgpu::Operations {
-                                load: wgpu::LoadOp::Clear(clear_color),
+                                load: wgpu::LoadOp::Clear(
+                                    frame_desc.clear_color(),
+                                ),
                                 store: true,
                             },
                         },
@@ -173,13 +169,13 @@ impl WgpuContext {
             );
         }
 
-        // Submit will accept anything that implements IntoIter
+        // Write buffers
         self.queue
             .write_buffer(&camera_buffer, 0, &camera_buffer_contents);
-        self.queue.submit(std::iter::once(encoder.finish()));
-        output.present();
 
-        Ok(())
+        // Submit queue
+        self.queue.submit(std::iter::once(encoder.finish()));
+        Ok(output.present())
     }
 
     pub fn add_shader(&mut self, name: &'static str, source: &'static str) {

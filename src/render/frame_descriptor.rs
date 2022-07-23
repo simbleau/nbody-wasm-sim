@@ -1,4 +1,6 @@
-use wgpu::{util::DeviceExt, BindGroup, BindGroupLayout, Buffer, Device};
+use wgpu::{
+    util::DeviceExt, BindGroup, BindGroupLayout, Buffer, Color, Device,
+};
 
 use crate::{
     gpu_primitives::{CameraUniform, GpuTriangle},
@@ -11,6 +13,7 @@ pub struct FrameDescriptor {
     wireframe: bool,
     gpu_triangles: Vec<GpuTriangle>,
     camera: Camera,
+    clear_color: Color,
 }
 
 impl FrameDescriptor {
@@ -27,18 +30,19 @@ impl FrameDescriptor {
             state.pan,
             state.zoom,
         );
-        gloo_console::log!(
-            "view",
-            state.view_size.as_vec2().x,
-            state.view_size.as_vec2().y
-        );
-        gloo_console::log!("translation", state.pan.x, state.pan.y);
-        gloo_console::log!("scale", state.zoom);
+
+        let clear_color = Color {
+            r: state.bg_color.x,
+            g: state.bg_color.y,
+            b: state.bg_color.z,
+            a: 1.0,
+        };
 
         FrameDescriptor {
             wireframe: state.wireframe,
             gpu_triangles,
             camera,
+            clear_color,
         }
     }
 
@@ -108,5 +112,9 @@ impl FrameDescriptor {
         device: &Device,
     ) -> (Buffer, Vec<u8>, BindGroup, BindGroupLayout) {
         self.camera.bind(device)
+    }
+
+    pub fn clear_color(&self) -> Color {
+        self.clear_color
     }
 }
