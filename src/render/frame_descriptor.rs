@@ -2,10 +2,7 @@ use wgpu::{
     util::DeviceExt, BindGroup, BindGroupLayout, Buffer, Color, Device,
 };
 
-use crate::{
-    gpu_primitives::{CameraUniform, GpuTriangle},
-    sim::State,
-};
+use crate::{gpu_primitives::GpuTriangle, sim::State};
 
 use super::camera::Camera;
 
@@ -57,7 +54,7 @@ impl FrameDescriptor {
         1
     }
 
-    pub fn get_vertex_buffer(&self, device: &Device) -> Buffer {
+    pub fn create_vertex_buffer(&self, device: &Device) -> Buffer {
         device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Vertex Buffer"),
             contents: &self.get_vertex_buffer_contents(),
@@ -65,7 +62,7 @@ impl FrameDescriptor {
         })
     }
 
-    pub fn get_vertex_buffer_contents(&self) -> Vec<u8> {
+    fn get_vertex_buffer_contents(&self) -> Vec<u8> {
         let mut buf: Vec<u8> = Vec::new();
 
         for instance in self.gpu_triangles.iter() {
@@ -76,7 +73,7 @@ impl FrameDescriptor {
         buf
     }
 
-    pub fn get_index_buffer(&self, device: &Device) -> Buffer {
+    pub fn create_index_buffer(&self, device: &Device) -> Buffer {
         device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Index Buffer"),
             contents: bytemuck::cast_slice(&self.get_index_buffer_contents()),
@@ -84,7 +81,7 @@ impl FrameDescriptor {
         })
     }
 
-    pub fn get_index_buffer_contents(&self) -> Vec<u16> {
+    fn get_index_buffer_contents(&self) -> Vec<u16> {
         let mut buf: Vec<u16> = Vec::new();
 
         let stride = match self.wireframe {

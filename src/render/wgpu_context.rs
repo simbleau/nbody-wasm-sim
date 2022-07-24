@@ -99,8 +99,8 @@ impl WgpuContext {
 
         // Create all data from the state we need for a frame
         let frame_desc = FrameDescriptor::from(&state);
-        let vertex_buffer = frame_desc.get_vertex_buffer(&self.device);
-        let index_buffer = frame_desc.get_index_buffer(&self.device);
+        let vertex_buffer = frame_desc.create_vertex_buffer(&self.device);
+        let index_buffer = frame_desc.create_index_buffer(&self.device);
         let (
             camera_buffer,
             camera_buffer_contents,
