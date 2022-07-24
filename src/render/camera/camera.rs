@@ -56,16 +56,14 @@ impl Camera {
         device: &Device,
     ) -> (Buffer, Vec<u8>, BindGroup, BindGroupLayout) {
         let layout = self.create_bind_group_layout(device);
-        let buffer_contents = self.buffer_contents();
+        let buffer_contents = self.get_buffer_contents();
         let buffer = self.create_buffer(device, &buffer_contents);
         let bind_group = self.create_bind_group(&buffer, &layout, device);
         (buffer, buffer_contents, bind_group, layout)
     }
 
-    fn buffer_contents(&self) -> Vec<u8> {
-        // TODO: Store this in the camera
+    fn get_buffer_contents(&self) -> Vec<u8> {
         let matrix = self.build_view_projection_matrix().to_cols_array_2d();
-        gloo_console::log!("matrix", format!("{:#?}", matrix));
         let camera_uniform = CameraUniform { view_proj: matrix };
         bytemuck::cast_slice(&[camera_uniform]).to_vec()
     }

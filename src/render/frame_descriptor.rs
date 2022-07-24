@@ -10,7 +10,7 @@ pub struct FrameDescriptor {
     wireframe: bool,
     gpu_triangles: Vec<GpuTriangle>,
     camera: Camera,
-    clear_color: Color,
+    pub clear_color: Color,
 }
 
 impl FrameDescriptor {
@@ -51,6 +51,7 @@ impl FrameDescriptor {
     }
 
     pub fn instances(&self) -> u32 {
+        // TODO
         1
     }
 
@@ -109,9 +110,5 @@ impl FrameDescriptor {
         device: &Device,
     ) -> (Buffer, Vec<u8>, BindGroup, BindGroupLayout) {
         self.camera.bind(device)
-    }
-
-    pub fn clear_color(&self) -> Color {
-        self.clear_color
     }
 }

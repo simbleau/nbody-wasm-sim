@@ -148,7 +148,7 @@ impl WgpuContext {
                             resolve_target: None,
                             ops: wgpu::Operations {
                                 load: wgpu::LoadOp::Clear(
-                                    frame_desc.clear_color(),
+                                    frame_desc.clear_color,
                                 ),
                                 store: true,
                             },
