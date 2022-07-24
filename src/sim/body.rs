@@ -10,7 +10,7 @@ pub struct Body {
 impl Default for Body {
     fn default() -> Self {
         Body {
-            origin: Vec2::new(1.0, 1.0),
+            origin: Vec2::new(0.0, 0.0),
             geometry: Geometry::Triangle([
                 Vec2::new(0.0, 0.5),
                 Vec2::new(-0.5, -0.5),
@@ -22,12 +22,15 @@ impl Default for Body {
 }
 
 impl Body {
+    pub fn new(shape: Geometry) -> Self {
+        Body {
+            geometry: shape,
+            ..Default::default()
+        }
+    }
+
     pub fn update(&mut self, dt: f32) {
         self.elapsed += dt;
-
-        // Make the top vertex move in a circle
-        // self.origin.x = (self.elapsed * WAVE_SPEED).cos() / 3.0;
-        // self.origin.y = (self.elapsed * WAVE_SPEED).sin() / 3.0;
     }
 }
 
