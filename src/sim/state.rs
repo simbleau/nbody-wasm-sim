@@ -174,7 +174,7 @@ impl<'a> State<'a> {
             return;
         }
 
-        self.bg_color = DVec3::new(0., 1.0, 0.);
+        self.bg_color = DVec3::new(0.16, 0.33, 0.16);
         match self.last_frame {
             Some(last_frame) => {
                 let now = Instant::now();
