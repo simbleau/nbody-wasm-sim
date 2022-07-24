@@ -183,23 +183,18 @@ impl WgpuContext {
     }
 
     pub fn add_shader(&mut self, name: &'static str, source: &'static str) {
-        let shader_module =
-            self.device
-                .create_shader_module(wgpu::ShaderModuleDescriptor {
-                    label: Some(name),
-                    source: wgpu::ShaderSource::Wgsl(
-                        std::borrow::Cow::Borrowed(source),
-                    ),
-                });
-
-        self.shaders.insert(name, shader_module);
+        if self.shaders.contains_key(name) {
+            panic!("Shader with name '{}' already exists", name);
+        }
+        let shader = crate::render::Shader::new(name, source);
+        self.shaders.insert(name, shader.bind(&self.device));
     }
 
     pub fn add_texture(&mut self, name: &'static str, bytes: &'static [u8]) {
         if self.textures.contains_key(name) {
             panic!("Texture with name '{}' already exists", name);
         }
-        let sw_texture = super::Texture::new(name, bytes);
+        let sw_texture = crate::render::Texture::new(name, bytes);
         let (hw_texture, bind_group, layout) = sw_texture.bind(&self.device);
         self.queue.write_texture(
             // Tells wgpu where to copy the pixel data
