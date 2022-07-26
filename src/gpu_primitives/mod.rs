@@ -6,11 +6,11 @@ pub trait GpuPrimitive {
 mod vertex;
 pub use vertex::GpuVertex;
 
-mod triangle;
-pub use triangle::GpuTriangle;
-
-mod circle;
-pub use circle::GpuCircle;
+mod quad;
+pub use quad::GpuQuad;
 
 mod camera;
 pub use camera::CameraUniform;
+
+mod transform;
+pub use transform::GpuTransform;

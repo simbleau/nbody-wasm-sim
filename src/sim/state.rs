@@ -2,7 +2,7 @@ use glam::{DVec2, DVec3, Quat, UVec2, Vec2, Vec3, Vec3Swizzles};
 use instant::Instant;
 use winit::event::{ElementState, VirtualKeyCode, WindowEvent};
 
-use super::Body;
+use crate::sim::Body;
 
 pub const INITIAL_VIEW_BOUNDS: Vec2 = Vec2::new(3., 3.);
 pub const CAM_PAN_SPEED: f32 = 0.05;
@@ -27,7 +27,7 @@ impl<'a> Default for State<'a> {
             mouse_pos: DVec2::default(),
             view_size: UVec2::default(),
             last_frame: None,
-            bodies: vec![Body::default()],
+            bodies: vec![],
             wireframe: false,
             paused: false,
             bg_color: DVec3::default(),
@@ -41,6 +41,13 @@ impl<'a> Default for State<'a> {
 
 impl<'a> State<'a> {
     pub fn new(view_size: Vec2) -> Self {
+        // Generate a bunch of bodies
+        let mut bodies = Vec::new();
+        for _ in 0..1 {
+            let body = Body::default();
+            bodies.push(body);
+        }
+
         Self {
             pan: Vec2::new(0., 0.),
             zoom: if (view_size.y - INITIAL_VIEW_BOUNDS.y).abs()
@@ -50,6 +57,7 @@ impl<'a> State<'a> {
             } else {
                 view_size.x / INITIAL_VIEW_BOUNDS.x
             },
+            bodies,
             ..Default::default()
         }
     }
@@ -148,7 +156,7 @@ impl<'a> State<'a> {
             return;
         }
 
-        self.bg_color = DVec3::new(0., 1.0, 0.);
+        self.bg_color = DVec3::new(0.16, 0.33, 0.16);
         match self.last_frame {
             Some(last_frame) => {
                 let now = Instant::now();

@@ -1,7 +1,9 @@
-use wgpu::{util::DeviceExt, BindGroup, BindGroupLayout, Buffer, Device};
+use wgpu::{
+    util::DeviceExt, BindGroup, BindGroupLayout, Buffer, Color, Device,
+};
 
 use crate::{
-    gpu_primitives::{CameraUniform, GpuTriangle},
+    gpu_primitives::{GpuPrimitive, GpuQuad},
     sim::State,
 };
 
@@ -9,17 +11,18 @@ use super::camera::Camera;
 
 pub struct FrameDescriptor {
     wireframe: bool,
-    gpu_triangles: Vec<GpuTriangle>,
+    // transforms: Vec<GpuTransform>,
     camera: Camera,
+    pub clear_color: Color,
 }
 
 impl FrameDescriptor {
     pub fn from(state: &State) -> FrameDescriptor {
-        let mut gpu_triangles = Vec::new();
+        // let mut transforms = Vec::new();
 
-        for body in &state.bodies {
-            gpu_triangles.push(body.into())
-        }
+        // for body in &state.bodies {
+        //     transforms.push(body.into())
+        // }
 
         let camera = Camera::new(
             state.view_size.as_vec2(),
@@ -27,33 +30,35 @@ impl FrameDescriptor {
             state.pan,
             state.zoom,
         );
-        gloo_console::log!(
-            "view",
-            state.view_size.as_vec2().x,
-            state.view_size.as_vec2().y
-        );
-        gloo_console::log!("translation", state.pan.x, state.pan.y);
-        gloo_console::log!("scale", state.zoom);
+
+        let clear_color = Color {
+            r: state.bg_color.x,
+            g: state.bg_color.y,
+            b: state.bg_color.z,
+            a: 1.0,
+        };
 
         FrameDescriptor {
             wireframe: state.wireframe,
-            gpu_triangles,
+            // transforms,
             camera,
+            clear_color,
         }
     }
 
     pub fn indicies(&self) -> u32 {
         match self.wireframe {
-            true => self.gpu_triangles.len() as u32 * 3 + 1,
-            false => self.gpu_triangles.len() as u32 * 3,
+            true => 1 as u32 * 5,
+            false => 1 as u32 * 6,
         }
     }
 
     pub fn instances(&self) -> u32 {
+        // TODO
         1
     }
 
-    pub fn get_vertex_buffer(&self, device: &Device) -> Buffer {
+    pub fn create_vertex_buffer(&self, device: &Device) -> Buffer {
         device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Vertex Buffer"),
             contents: &self.get_vertex_buffer_contents(),
@@ -61,18 +66,11 @@ impl FrameDescriptor {
         })
     }
 
-    pub fn get_vertex_buffer_contents(&self) -> Vec<u8> {
-        let mut buf: Vec<u8> = Vec::new();
-
-        for instance in self.gpu_triangles.iter() {
-            let bytes = bytemuck::cast_slice(&instance.verts);
-            buf.extend(bytes);
-        }
-
-        buf
+    fn get_vertex_buffer_contents(&self) -> Vec<u8> {
+        GpuQuad.data()
     }
 
-    pub fn get_index_buffer(&self, device: &Device) -> Buffer {
+    pub fn create_index_buffer(&self, device: &Device) -> Buffer {
         device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Index Buffer"),
             contents: bytemuck::cast_slice(&self.get_index_buffer_contents()),
@@ -80,79 +78,31 @@ impl FrameDescriptor {
         })
     }
 
-    pub fn get_index_buffer_contents(&self) -> Vec<u16> {
-        let mut buf: Vec<u16> = Vec::new();
+    // pub fn create_instance_buffer(&self, device: &Device) -> Buffer {
+    //     let instance_data = self
+    //         .render_instances
+    //         .iter()
+    //         .map(RenderInstance::to_raw)
+    //         .collect::<Vec<_>>();
 
-        let stride = match self.wireframe {
-            true => 4,
-            false => 3,
-        };
+    //     device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+    //         label: Some("Instance Buffer"),
+    //         contents: bytemuck::cast_slice(&instance_data),
+    //         usage: wgpu::BufferUsages::VERTEX,
+    //     })
+    // }
 
-        for (i, _) in self.gpu_triangles.iter().enumerate() {
-            let indx = i as u16 * stride;
-
-            buf.push(indx);
-            buf.push(indx + 1);
-            buf.push(indx + 2);
-
-            if let true = self.wireframe {
-                buf.push(indx);
-            }
+    fn get_index_buffer_contents(&self) -> Vec<u16> {
+        match self.wireframe {
+            true => vec![0, 1, 2, 3, 0],
+            false => vec![0, 1, 2, 0, 2, 3],
         }
-
-        buf
     }
 
-    pub fn get_camera_buffer(&self, device: &Device) -> Buffer {
-        device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: Some("Camera Buffer"),
-            contents: &self.get_camera_buffer_contents(),
-            usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
-        })
-    }
-
-    pub fn get_camera_buffer_contents(&self) -> Vec<u8> {
-        let matrix = self
-            .camera
-            .build_view_projection_matrix()
-            .to_cols_array_2d();
-        gloo_console::log!("matrix", format!("{:#?}", matrix));
-        let camera_uniform = CameraUniform { view_proj: matrix };
-        bytemuck::cast_slice(&[camera_uniform]).to_vec()
-    }
-
-    pub fn get_camera_bind_group_layout(
+    pub fn create_camera_binding(
         &self,
         device: &Device,
-    ) -> BindGroupLayout {
-        device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-            entries: &[wgpu::BindGroupLayoutEntry {
-                binding: 0,
-                visibility: wgpu::ShaderStages::VERTEX,
-                ty: wgpu::BindingType::Buffer {
-                    ty: wgpu::BufferBindingType::Uniform,
-                    has_dynamic_offset: false,
-                    min_binding_size: None,
-                },
-                count: None,
-            }],
-            label: Some("Camera Bind Group Layout"),
-        })
-    }
-
-    pub fn get_camera_bind_group(
-        &self,
-        camera_buffer: &Buffer,
-        layout: &BindGroupLayout,
-        device: &Device,
-    ) -> BindGroup {
-        device.create_bind_group(&wgpu::BindGroupDescriptor {
-            layout,
-            entries: &[wgpu::BindGroupEntry {
-                binding: 0,
-                resource: camera_buffer.as_entire_binding(),
-            }],
-            label: Some("Camera Bind Group"),
-        })
+    ) -> (Buffer, Vec<u8>, BindGroup, BindGroupLayout) {
+        self.camera.bind(device)
     }
 }

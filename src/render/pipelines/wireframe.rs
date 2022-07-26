@@ -1,6 +1,6 @@
 use wgpu::PipelineLayout;
 
-use crate::gpu_primitives::{GpuPrimitive, GpuTriangle};
+use crate::gpu_primitives::{GpuPrimitive, GpuQuad};
 
 pub(crate) fn get(
     context: &crate::render::WgpuContext,
@@ -16,7 +16,7 @@ pub(crate) fn get(
             vertex: wgpu::VertexState {
                 module: &vert_shader,
                 entry_point: "vs_main",
-                buffers: &[GpuTriangle::desc()],
+                buffers: &[GpuQuad::desc()],
             },
             fragment: Some(wgpu::FragmentState {
                 module: &frag_shader,
