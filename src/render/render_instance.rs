@@ -1,15 +1,15 @@
 use glam::{Mat4, Quat, Vec2};
 
-use crate::gpu_primitives::InstanceRaw;
+use crate::gpu_primitives::GpuTransform;
 
 pub struct RenderInstance {
-    position: Vec2,
-    rotation: Quat,
+    pub position: Vec2,
+    pub rotation: Quat,
 }
 
 impl RenderInstance {
-    fn to_raw(&self) -> InstanceRaw {
-        InstanceRaw {
+    pub fn to_raw(&self) -> GpuTransform {
+        GpuTransform {
             model: Mat4::from_rotation_translation(
                 self.rotation,
                 self.position.extend(0.0),

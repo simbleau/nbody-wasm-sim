@@ -2,24 +2,27 @@ use wgpu::{
     util::DeviceExt, BindGroup, BindGroupLayout, Buffer, Color, Device,
 };
 
-use crate::{gpu_primitives::GpuTriangle, sim::State};
+use crate::{
+    gpu_primitives::{GpuPrimitive, GpuQuad},
+    sim::State,
+};
 
 use super::camera::Camera;
 
 pub struct FrameDescriptor {
     wireframe: bool,
-    gpu_triangles: Vec<GpuTriangle>,
+    // transforms: Vec<GpuTransform>,
     camera: Camera,
     pub clear_color: Color,
 }
 
 impl FrameDescriptor {
     pub fn from(state: &State) -> FrameDescriptor {
-        let mut gpu_triangles = Vec::new();
+        // let mut transforms = Vec::new();
 
-        for body in &state.bodies {
-            gpu_triangles.push(body.into())
-        }
+        // for body in &state.bodies {
+        //     transforms.push(body.into())
+        // }
 
         let camera = Camera::new(
             state.view_size.as_vec2(),
@@ -37,7 +40,7 @@ impl FrameDescriptor {
 
         FrameDescriptor {
             wireframe: state.wireframe,
-            gpu_triangles,
+            // transforms,
             camera,
             clear_color,
         }
@@ -45,8 +48,8 @@ impl FrameDescriptor {
 
     pub fn indicies(&self) -> u32 {
         match self.wireframe {
-            true => self.gpu_triangles.len() as u32 * 3 + 1,
-            false => self.gpu_triangles.len() as u32 * 3,
+            true => 1 as u32 * 5,
+            false => 1 as u32 * 6,
         }
     }
 
@@ -64,14 +67,7 @@ impl FrameDescriptor {
     }
 
     fn get_vertex_buffer_contents(&self) -> Vec<u8> {
-        let mut buf: Vec<u8> = Vec::new();
-
-        for instance in self.gpu_triangles.iter() {
-            let bytes = bytemuck::cast_slice(&instance.verts);
-            buf.extend(bytes);
-        }
-
-        buf
+        GpuQuad.data()
     }
 
     pub fn create_index_buffer(&self, device: &Device) -> Buffer {
@@ -82,27 +78,25 @@ impl FrameDescriptor {
         })
     }
 
+    // pub fn create_instance_buffer(&self, device: &Device) -> Buffer {
+    //     let instance_data = self
+    //         .render_instances
+    //         .iter()
+    //         .map(RenderInstance::to_raw)
+    //         .collect::<Vec<_>>();
+
+    //     device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+    //         label: Some("Instance Buffer"),
+    //         contents: bytemuck::cast_slice(&instance_data),
+    //         usage: wgpu::BufferUsages::VERTEX,
+    //     })
+    // }
+
     fn get_index_buffer_contents(&self) -> Vec<u16> {
-        let mut buf: Vec<u16> = Vec::new();
-
-        let stride = match self.wireframe {
-            true => 4,
-            false => 3,
-        };
-
-        for (i, _) in self.gpu_triangles.iter().enumerate() {
-            let indx = i as u16 * stride;
-
-            buf.push(indx);
-            buf.push(indx + 1);
-            buf.push(indx + 2);
-
-            if let true = self.wireframe {
-                buf.push(indx);
-            }
+        match self.wireframe {
+            true => vec![0, 1, 2, 3, 0],
+            false => vec![0, 1, 2, 0, 2, 3],
         }
-
-        buf
     }
 
     pub fn create_camera_binding(

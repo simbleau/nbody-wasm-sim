@@ -2,7 +2,7 @@ use glam::{DVec2, DVec3, Quat, UVec2, Vec2, Vec3, Vec3Swizzles};
 use instant::Instant;
 use winit::event::{ElementState, VirtualKeyCode, WindowEvent};
 
-use crate::sim::{geometry::Geometry, Body};
+use crate::sim::Body;
 
 pub const INITIAL_VIEW_BOUNDS: Vec2 = Vec2::new(3., 3.);
 pub const CAM_PAN_SPEED: f32 = 0.05;
@@ -42,27 +42,9 @@ impl<'a> Default for State<'a> {
 impl<'a> State<'a> {
     pub fn new(view_size: Vec2) -> Self {
         // Generate a bunch of bodies
-        let triangle_size_max = 1.0;
-        let displacement_max = 3.0;
-        let half_displacement_max = displacement_max / 2.0;
-        let rngify = |x| (js_sys::Math::random() * x) as f32;
         let mut bodies = Vec::new();
         for _ in 0..1 {
-            let mut body = Body::new(Geometry::Triangle([
-                Vec2::new(0.0, rngify(triangle_size_max)),
-                Vec2::new(
-                    -rngify(triangle_size_max),
-                    -rngify(triangle_size_max),
-                ),
-                Vec2::new(
-                    rngify(triangle_size_max),
-                    -rngify(triangle_size_max),
-                ),
-            ]));
-            body.origin.x +=
-                rngify(displacement_max) - half_displacement_max as f32;
-            body.origin.y +=
-                rngify(displacement_max) - half_displacement_max as f32;
+            let body = Body::default();
             bodies.push(body);
         }
 
