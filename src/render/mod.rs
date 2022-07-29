@@ -12,6 +12,3 @@ pub use texture::Texture;
 
 mod camera;
 pub use camera::Camera;
-
-mod render_instance;
-pub use render_instance::RenderInstance;
