@@ -3,7 +3,7 @@ use wgpu::{
 };
 
 use crate::{
-    gpu_primitives::{GpuPrimitive, GpuQuad},
+    gpu_primitives::{GpuPrimitive, GpuQuad, GpuTransform},
     sim::State,
 };
 
@@ -11,18 +11,18 @@ use super::camera::Camera;
 
 pub struct FrameDescriptor {
     wireframe: bool,
-    // transforms: Vec<GpuTransform>,
+    transforms: Vec<GpuTransform>,
     camera: Camera,
     pub clear_color: Color,
 }
 
 impl FrameDescriptor {
     pub fn from(state: &State) -> FrameDescriptor {
-        // let mut transforms = Vec::new();
+        let mut transforms = Vec::new();
 
-        // for body in &state.bodies {
-        //     transforms.push(body.into())
-        // }
+        for body in &state.bodies {
+            transforms.push(body.into())
+        }
 
         let camera = Camera::new(
             state.view_size.as_vec2(),
@@ -40,7 +40,7 @@ impl FrameDescriptor {
 
         FrameDescriptor {
             wireframe: state.wireframe,
-            // transforms,
+            transforms,
             camera,
             clear_color,
         }
@@ -54,8 +54,7 @@ impl FrameDescriptor {
     }
 
     pub fn instances(&self) -> u32 {
-        // TODO
-        1
+        self.transforms.len() as u32
     }
 
     pub fn create_vertex_buffer(&self, device: &Device) -> Buffer {
@@ -78,19 +77,19 @@ impl FrameDescriptor {
         })
     }
 
-    // pub fn create_instance_buffer(&self, device: &Device) -> Buffer {
-    //     let instance_data = self
-    //         .render_instances
-    //         .iter()
-    //         .map(RenderInstance::to_raw)
-    //         .collect::<Vec<_>>();
+    pub fn create_instance_buffer(&self, device: &Device) -> Buffer {
+        let instance_data = self
+            .transforms
+            .iter()
+            .map(|gpu_transform| gpu_transform.model)
+            .collect::<Vec<_>>();
 
-    //     device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-    //         label: Some("Instance Buffer"),
-    //         contents: bytemuck::cast_slice(&instance_data),
-    //         usage: wgpu::BufferUsages::VERTEX,
-    //     })
-    // }
+        device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("Instance Buffer"),
+            contents: bytemuck::cast_slice(&instance_data),
+            usage: wgpu::BufferUsages::VERTEX,
+        })
+    }
 
     fn get_index_buffer_contents(&self) -> Vec<u16> {
         match self.wireframe {

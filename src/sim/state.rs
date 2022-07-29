@@ -4,7 +4,7 @@ use winit::event::{ElementState, VirtualKeyCode, WindowEvent};
 
 use crate::sim::Body;
 
-pub const INITIAL_VIEW_BOUNDS: Vec2 = Vec2::new(3., 3.);
+pub const INITIAL_VIEW_BOUNDS: Vec2 = Vec2::new(1., 1.);
 pub const CAM_PAN_SPEED: f32 = 0.05;
 
 pub struct State<'a> {

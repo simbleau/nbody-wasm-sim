@@ -109,6 +109,7 @@ impl WgpuContext {
         ) = frame_desc.create_camera_binding(&self.device);
         let (_, tex_bind_group, tex_bind_group_layout) =
             self.get_texture(state.texture_key);
+        let instance_buffer = frame_desc.create_instance_buffer(&self.device);
 
         // Get rendering pipeline
         let pipeline = match &state.wireframe {
@@ -162,6 +163,7 @@ impl WgpuContext {
                 pass.set_bind_group(1, tex_bind_group, &[]);
             }
             pass.set_vertex_buffer(0, vertex_buffer.slice(..));
+            pass.set_vertex_buffer(1, instance_buffer.slice(..));
             pass.set_index_buffer(
                 index_buffer.slice(..),
                 wgpu::IndexFormat::Uint16,
