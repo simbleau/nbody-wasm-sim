@@ -1,10 +1,10 @@
-use glam::{DVec2, DVec3, Quat, UVec2, Vec2, Vec3, Vec3Swizzles};
+use glam::{DVec2, DVec3, Mat3, Quat, UVec2, Vec2, Vec3, Vec3Swizzles};
 use instant::Instant;
 use winit::event::{ElementState, VirtualKeyCode, WindowEvent};
 
 use crate::sim::Body;
 
-pub const INITIAL_VIEW_BOUNDS: f32 = 1000.0;
+pub const INITIAL_VIEW_BOUNDS: f32 = 100.0;
 pub const CAM_PAN_SPEED: f32 = 0.05;
 
 pub struct State<'a> {
@@ -54,12 +54,13 @@ impl<'a> State<'a> {
         for _ in 0..1000 {
             let mut body = Body::new(Vec2::ZERO, 0.0, rngify(radius_max));
 
-            let displacement =
-                Vec2::new(rngify(INITIAL_VIEW_BOUNDS as f64 / 2.0), 0.0);
+            let r = INITIAL_VIEW_BOUNDS / 2.0 * rngify(1.0).sqrt();
+            let displacement = Vec3::new(r, 0.0, 0.0);
             let direction =
-                Quat::from_rotation_z(rngify(std::f64::consts::PI * 2.0));
+                Mat3::from_rotation_z(rngify(std::f64::consts::PI * 2.0));
 
-            body.origin = (direction * displacement.extend(1.0)).xy();
+            body.origin = (direction * displacement).xy();
+
             bodies.push(body);
         }
 
