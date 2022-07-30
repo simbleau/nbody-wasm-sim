@@ -7,10 +7,9 @@ use crate::sim::Body;
 use super::input::InputController;
 
 pub const INITIAL_VIEW_BOUNDS: f32 = 100.0;
-pub const CAM_ZOOM_SPEED: f32 = 12.0;
+pub const CAM_ZOOM_SPEED: f32 = 5.0;
 pub const CAM_ROTATE_SPEED: f32 = 5.0;
-pub const CAM_MAX_PAN_SPEED: f32 = 100.0;
-pub const CAM_PAN_ACCELERATION: f32 = 400.0;
+pub const CAM_PAN_SPEED: f32 = 400.0;
 pub const DAMPENING: f32 = 0.05;
 
 pub struct State<'a> {
@@ -124,54 +123,39 @@ impl<'a> State<'a> {
             self.zoom -= self.zoom * CAM_ZOOM_SPEED * dt;
         }
         // Translation
-        let mut acceleration_direction = Vec2::ZERO;
+        let mut cam_direction = Vec2::ZERO;
         if self.input_controller.is_key_active(VirtualKeyCode::W) {
-            acceleration_direction +=
+            cam_direction +=
                 (Quat::from_rotation_z(self.rotation) * (Vec3::Y)).xy();
         }
         if self.input_controller.is_key_active(VirtualKeyCode::A) {
-            acceleration_direction -=
+            cam_direction -=
                 (Quat::from_rotation_z(self.rotation) * (Vec3::X)).xy();
         }
         if self.input_controller.is_key_active(VirtualKeyCode::S) {
-            acceleration_direction -=
+            cam_direction -=
                 (Quat::from_rotation_z(self.rotation) * (Vec3::Y)).xy();
         }
         if self.input_controller.is_key_active(VirtualKeyCode::D) {
-            acceleration_direction +=
+            cam_direction +=
                 (Quat::from_rotation_z(self.rotation) * (Vec3::X)).xy();
         }
 
         // Normalize
-        acceleration_direction = acceleration_direction.normalize_or_zero();
+        cam_direction = cam_direction.normalize_or_zero();
 
-        // Camera acceleration
+        // Camera movement
         if self.input_controller.is_one_of_key_active(vec![
             VirtualKeyCode::W,
             VirtualKeyCode::A,
             VirtualKeyCode::S,
             VirtualKeyCode::D,
         ]) {
-            // Acceleration
-            self.pan_velocity =
-                ((acceleration_direction * CAM_PAN_ACCELERATION) / self.zoom)
-                    .clamp(
-                        Vec2::splat(-CAM_MAX_PAN_SPEED),
-                        Vec2::splat(CAM_MAX_PAN_SPEED),
-                    );
+            // Move camera
+            self.pan_velocity = (cam_direction * CAM_PAN_SPEED) / self.zoom;
         } else if self.pan_velocity.length_squared() > 0.0 {
-            // Dampening
-            let deceleration = -1.0 * self.pan_velocity;
-
-            let delta_v = deceleration * DAMPENING;
-
-            let new_velocity = self.pan_velocity + delta_v;
-
-            if new_velocity.dot(self.pan_velocity) < 0.0 {
-                self.pan_velocity = Vec2::ZERO;
-            } else {
-                self.pan_velocity = new_velocity;
-            }
+            // Dampen camera velocity
+            self.pan_velocity += -1.0 * self.pan_velocity * DAMPENING;
         }
         // Wireframe
         if self.input_controller.is_key_pressed(VirtualKeyCode::Q) {
