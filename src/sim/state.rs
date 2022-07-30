@@ -10,7 +10,8 @@ pub const INITIAL_VIEW_BOUNDS: f32 = 100.0;
 pub const CAM_ZOOM_SPEED: f32 = 20.0;
 pub const CAM_ROTATE_SPEED: f32 = 5.0;
 pub const CAM_MAX_PAN_SPEED: f32 = 100.0;
-pub const CAM_PAN_ACCELERATION: f32 = 0.1;
+pub const CAM_PAN_ACCELERATION: f32 = 5.0;
+pub const DAMPENING: f32 = 0.05;
 
 pub struct State<'a> {
     pub mouse_pos: DVec2,
@@ -153,16 +154,16 @@ impl<'a> State<'a> {
         ]) {
             // Acceleration
             self.pan_velocity = (self.pan_velocity
-                + acceleration_direction * CAM_PAN_ACCELERATION)
+                + (acceleration_direction * CAM_PAN_ACCELERATION) / self.zoom)
                 .clamp(
                     Vec2::splat(-CAM_MAX_PAN_SPEED),
                     Vec2::splat(CAM_MAX_PAN_SPEED),
                 );
         } else if self.pan_velocity.length_squared() > 0.0 {
             // Dampening
-            let deceleration_direction = -1.0 * self.pan_velocity.normalize();
+            let deceleration = -1.0 * self.pan_velocity;
 
-            let delta_v = deceleration_direction * CAM_PAN_ACCELERATION;
+            let delta_v = deceleration * DAMPENING;
 
             let new_velocity = self.pan_velocity + delta_v;
 
@@ -184,7 +185,7 @@ impl<'a> State<'a> {
             };
         }
 
-        self.pan += self.pan_velocity * dt / self.zoom;
+        self.pan += self.pan_velocity * dt;
     }
 
     pub fn update(&mut self) {
