@@ -4,8 +4,12 @@ use winit::event::{ElementState, VirtualKeyCode, WindowEvent};
 
 use crate::sim::Body;
 
+use super::input::InputController;
+
 pub const INITIAL_VIEW_BOUNDS: f32 = 100.0;
-pub const CAM_PAN_SPEED: f32 = 0.05;
+pub const CAM_PAN_SPEED: f32 = 25.0;
+pub const CAM_ZOOM_SPEED: f32 = 5.0;
+pub const CAM_ROTATE_SPEED: f32 = 5.0;
 
 pub struct State<'a> {
     pub mouse_pos: DVec2,
@@ -19,6 +23,7 @@ pub struct State<'a> {
     pub pan: Vec2,
     pub rotation: f32,
     pub zoom: f32,
+    pub input_controller: InputController,
 }
 
 impl<'a> Default for State<'a> {
@@ -35,6 +40,7 @@ impl<'a> Default for State<'a> {
             pan: Vec2::ZERO,
             rotation: 0.0,
             zoom: 100.0,
+            input_controller: InputController::default(),
         }
     }
 }
@@ -72,81 +78,20 @@ impl<'a> State<'a> {
         }
     }
 
-    pub fn input(&mut self, event: &WindowEvent) {
+    pub fn handle_input(&mut self, event: &WindowEvent) {
         // We have no events to handle currently
         match event {
-            // Rotation
-            WindowEvent::KeyboardInput { input, .. }
-                if input.virtual_keycode == Some(VirtualKeyCode::Left) =>
-            {
-                self.rotation += 0.1;
-            }
-            WindowEvent::KeyboardInput { input, .. }
-                if input.virtual_keycode == Some(VirtualKeyCode::Right) =>
-            {
-                self.rotation -= 0.1;
-            }
-            // Scale
-            WindowEvent::KeyboardInput { input, .. }
-                if input.virtual_keycode == Some(VirtualKeyCode::Up) =>
-            {
-                self.zoom += self.zoom * 0.1;
-            }
-            WindowEvent::KeyboardInput { input, .. }
-                if input.virtual_keycode == Some(VirtualKeyCode::Down) =>
-            {
-                self.zoom -= self.zoom * 0.1;
-            }
-            // Translation
-            WindowEvent::KeyboardInput { input, .. }
-                if input.virtual_keycode == Some(VirtualKeyCode::W) =>
-            {
-                self.pan += (Quat::from_rotation_z(self.rotation)
-                    * (CAM_PAN_SPEED * Vec3::Y))
-                    .xy();
-            }
-            WindowEvent::KeyboardInput { input, .. }
-                if input.virtual_keycode == Some(VirtualKeyCode::A) =>
-            {
-                self.pan -= (Quat::from_rotation_z(self.rotation)
-                    * (CAM_PAN_SPEED * Vec3::X))
-                    .xy();
-            }
-            WindowEvent::KeyboardInput { input, .. }
-                if input.virtual_keycode == Some(VirtualKeyCode::S) =>
-            {
-                self.pan -= (Quat::from_rotation_z(self.rotation)
-                    * (CAM_PAN_SPEED * Vec3::Y))
-                    .xy();
-            }
-            WindowEvent::KeyboardInput { input, .. }
-                if input.virtual_keycode == Some(VirtualKeyCode::D) =>
-            {
-                self.pan += (Quat::from_rotation_z(self.rotation)
-                    * (CAM_PAN_SPEED * Vec3::X))
-                    .xy();
-            }
-            // Change sim visuals
-            WindowEvent::KeyboardInput { input, .. }
-                if input.virtual_keycode == Some(VirtualKeyCode::Space)
-                    && input.state == ElementState::Released =>
-            {
-                self.paused = !self.paused;
-            }
-            WindowEvent::KeyboardInput { input, .. }
-                if input.virtual_keycode == Some(VirtualKeyCode::Q)
-                    && input.state == ElementState::Released =>
-            {
-                self.wireframe = !self.wireframe;
-            }
-            WindowEvent::KeyboardInput { input, .. }
-                if input.virtual_keycode == Some(VirtualKeyCode::E)
-                    && input.state == ElementState::Released =>
-            {
-                self.texture_key = match self.texture_key {
-                    "moon" => "cookie",
-                    _ => "moon",
-                };
+            WindowEvent::KeyboardInput { input, .. } => {
+                if let Some(key) = input.virtual_keycode {
+                    match input.state {
+                        ElementState::Pressed => {
+                            self.input_controller.press(key)
+                        }
+                        ElementState::Released => {
+                            self.input_controller.release(key)
+                        }
+                    }
+                }
             }
             WindowEvent::CursorMoved { position, .. } => {
                 self.mouse_pos = DVec2::new(position.x, position.y);
@@ -158,13 +103,69 @@ impl<'a> State<'a> {
         }
     }
 
+    fn update_camera(&mut self, dt: f32) {
+        // Handle input
+        // Rotation
+        if self.input_controller.is_key_active(VirtualKeyCode::Left) {
+            self.rotation += CAM_ROTATE_SPEED * dt;
+        }
+        if self.input_controller.is_key_active(VirtualKeyCode::Right) {
+            self.rotation -= CAM_ROTATE_SPEED * dt;
+        }
+        // Scale
+        if self.input_controller.is_key_active(VirtualKeyCode::Up) {
+            self.zoom += self.zoom * CAM_ZOOM_SPEED * dt;
+        }
+        if self.input_controller.is_key_active(VirtualKeyCode::Down) {
+            self.zoom -= self.zoom * CAM_ZOOM_SPEED * dt;
+        }
+        // Translation
+        if self.input_controller.is_key_active(VirtualKeyCode::W) {
+            self.pan += (Quat::from_rotation_z(self.rotation)
+                * (CAM_PAN_SPEED * Vec3::Y * dt))
+                .xy();
+        }
+        if self.input_controller.is_key_active(VirtualKeyCode::A) {
+            self.pan -= (Quat::from_rotation_z(self.rotation)
+                * (CAM_PAN_SPEED * Vec3::X * dt))
+                .xy();
+        }
+        if self.input_controller.is_key_active(VirtualKeyCode::S) {
+            self.pan -= (Quat::from_rotation_z(self.rotation)
+                * (CAM_PAN_SPEED * Vec3::Y * dt))
+                .xy();
+        }
+        if self.input_controller.is_key_active(VirtualKeyCode::D) {
+            self.pan += (Quat::from_rotation_z(self.rotation)
+                * (CAM_PAN_SPEED * Vec3::X * dt))
+                .xy();
+        }
+        // Wireframe
+        if self.input_controller.is_key_pressed(VirtualKeyCode::Q) {
+            self.wireframe = !self.wireframe;
+        }
+        // Texture Change
+        if self.input_controller.is_key_released(VirtualKeyCode::E) {
+            self.texture_key = match self.texture_key {
+                "moon" => "cookie",
+                _ => "moon",
+            };
+        }
+    }
+
     pub fn update(&mut self) {
+        // Pausing
+        if self.input_controller.is_key_pressed(VirtualKeyCode::Space) {
+            self.paused = !self.paused;
+        }
+
         // Remain paused
         if self.paused {
             self.last_frame = Some(Instant::now());
             return;
         }
 
+        // Update sim
         match self.last_frame {
             Some(last_frame) => {
                 let now = Instant::now();
@@ -176,10 +177,16 @@ impl<'a> State<'a> {
                     body.update(dt_f32);
                 }
                 self.last_frame = Some(now);
+
+                // Handle camera input
+                self.update_camera(dt_f32);
             }
             None => {
                 self.last_frame = Some(Instant::now());
             }
         }
+
+        // Reset input controller
+        self.input_controller.update();
     }
 }
