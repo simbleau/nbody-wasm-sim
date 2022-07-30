@@ -7,9 +7,10 @@ use crate::sim::Body;
 use super::input::InputController;
 
 pub const INITIAL_VIEW_BOUNDS: f32 = 100.0;
-pub const CAM_PAN_SPEED: f32 = 25.0;
 pub const CAM_ZOOM_SPEED: f32 = 5.0;
 pub const CAM_ROTATE_SPEED: f32 = 5.0;
+pub const CAM_PAN_SPEED: f32 = 400.0;
+pub const DAMPENING: f32 = 0.05;
 
 pub struct State<'a> {
     pub mouse_pos: DVec2,
@@ -21,6 +22,7 @@ pub struct State<'a> {
     pub bg_color: DVec3,
     pub texture_key: &'a str,
     pub pan: Vec2,
+    pub pan_velocity: Vec2,
     pub rotation: f32,
     pub zoom: f32,
     pub input_controller: InputController,
@@ -38,6 +40,7 @@ impl<'a> Default for State<'a> {
             bg_color: DVec3::default(),
             texture_key: "moon",
             pan: Vec2::ZERO,
+            pan_velocity: Vec2::ZERO,
             rotation: 0.0,
             zoom: 100.0,
             input_controller: InputController::default(),
@@ -120,25 +123,39 @@ impl<'a> State<'a> {
             self.zoom -= self.zoom * CAM_ZOOM_SPEED * dt;
         }
         // Translation
+        let mut cam_direction = Vec2::ZERO;
         if self.input_controller.is_key_active(VirtualKeyCode::W) {
-            self.pan += (Quat::from_rotation_z(self.rotation)
-                * (CAM_PAN_SPEED * Vec3::Y * dt))
-                .xy();
+            cam_direction +=
+                (Quat::from_rotation_z(self.rotation) * (Vec3::Y)).xy();
         }
         if self.input_controller.is_key_active(VirtualKeyCode::A) {
-            self.pan -= (Quat::from_rotation_z(self.rotation)
-                * (CAM_PAN_SPEED * Vec3::X * dt))
-                .xy();
+            cam_direction -=
+                (Quat::from_rotation_z(self.rotation) * (Vec3::X)).xy();
         }
         if self.input_controller.is_key_active(VirtualKeyCode::S) {
-            self.pan -= (Quat::from_rotation_z(self.rotation)
-                * (CAM_PAN_SPEED * Vec3::Y * dt))
-                .xy();
+            cam_direction -=
+                (Quat::from_rotation_z(self.rotation) * (Vec3::Y)).xy();
         }
         if self.input_controller.is_key_active(VirtualKeyCode::D) {
-            self.pan += (Quat::from_rotation_z(self.rotation)
-                * (CAM_PAN_SPEED * Vec3::X * dt))
-                .xy();
+            cam_direction +=
+                (Quat::from_rotation_z(self.rotation) * (Vec3::X)).xy();
+        }
+
+        // Normalize
+        cam_direction = cam_direction.normalize_or_zero();
+
+        // Camera movement
+        if self.input_controller.is_one_of_key_active(vec![
+            VirtualKeyCode::W,
+            VirtualKeyCode::A,
+            VirtualKeyCode::S,
+            VirtualKeyCode::D,
+        ]) {
+            // Move camera
+            self.pan_velocity = (cam_direction * CAM_PAN_SPEED) / self.zoom;
+        } else if self.pan_velocity.length_squared() > 0.0 {
+            // Dampen camera velocity
+            self.pan_velocity += -1.0 * self.pan_velocity * DAMPENING;
         }
         // Wireframe
         if self.input_controller.is_key_pressed(VirtualKeyCode::Q) {
@@ -151,6 +168,8 @@ impl<'a> State<'a> {
                 _ => "moon",
             };
         }
+
+        self.pan += self.pan_velocity * dt;
     }
 
     pub fn update(&mut self) {
