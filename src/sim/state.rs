@@ -7,10 +7,10 @@ use crate::sim::Body;
 use super::input::InputController;
 
 pub const INITIAL_VIEW_BOUNDS: f32 = 100.0;
-pub const CAM_ZOOM_SPEED: f32 = 5.0;
+pub const CAM_ZOOM_SPEED: f32 = 20.0;
 pub const CAM_ROTATE_SPEED: f32 = 5.0;
-pub const CAM_MAX_PAN_SPEED: f32 = 10.0;
-pub const CAM_PAN_ACCELERATION: f32 = 0.01;
+pub const CAM_MAX_PAN_SPEED: f32 = 100.0;
+pub const CAM_PAN_ACCELERATION: f32 = 0.1;
 
 pub struct State<'a> {
     pub mouse_pos: DVec2,
@@ -123,29 +123,26 @@ impl<'a> State<'a> {
             self.zoom -= self.zoom * CAM_ZOOM_SPEED * dt;
         }
         // Translation
-        let mut acceleration_vector = Vec2::ZERO;
+        let mut acceleration_direction = Vec2::ZERO;
         if self.input_controller.is_key_active(VirtualKeyCode::W) {
-            acceleration_vector +=
-                (Quat::from_rotation_z(self.rotation) * (Vec3::Y * dt)).xy()
-                    / self.zoom;
+            acceleration_direction +=
+                (Quat::from_rotation_z(self.rotation) * (Vec3::Y)).xy();
         }
         if self.input_controller.is_key_active(VirtualKeyCode::A) {
-            acceleration_vector -=
-                (Quat::from_rotation_z(self.rotation) * (Vec3::X * dt)).xy()
-                    / self.zoom;
+            acceleration_direction -=
+                (Quat::from_rotation_z(self.rotation) * (Vec3::X)).xy();
         }
         if self.input_controller.is_key_active(VirtualKeyCode::S) {
-            acceleration_vector -=
-                (Quat::from_rotation_z(self.rotation) * (Vec3::Y * dt)).xy()
-                    / self.zoom;
+            acceleration_direction -=
+                (Quat::from_rotation_z(self.rotation) * (Vec3::Y)).xy();
         }
         if self.input_controller.is_key_active(VirtualKeyCode::D) {
-            acceleration_vector +=
-                (Quat::from_rotation_z(self.rotation) * (Vec3::X * dt)).xy()
-                    / self.zoom;
+            acceleration_direction +=
+                (Quat::from_rotation_z(self.rotation) * (Vec3::X)).xy();
         }
+
         // Normalize
-        acceleration_vector = acceleration_vector.normalize_or_zero();
+        acceleration_direction = acceleration_direction.normalize_or_zero();
 
         // Camera acceleration
         if self.input_controller.is_one_of_key_active(vec![
@@ -156,27 +153,23 @@ impl<'a> State<'a> {
         ]) {
             // Acceleration
             self.pan_velocity = (self.pan_velocity
-                + acceleration_vector * CAM_PAN_ACCELERATION)
+                + acceleration_direction * CAM_PAN_ACCELERATION)
                 .clamp(
                     Vec2::splat(-CAM_MAX_PAN_SPEED),
                     Vec2::splat(CAM_MAX_PAN_SPEED),
                 );
         } else if self.pan_velocity.length_squared() > 0.0 {
             // Dampening
+            let deceleration_direction = -1.0 * self.pan_velocity.normalize();
 
-            // Opposite direction * Acceleration
-            let differential =
-                -self.pan_velocity.normalize() * CAM_PAN_ACCELERATION;
-            if self.pan_velocity.length() < 0.0 {
-                // HAndle negative dampening
-                gloo_console::log!("neg");
-                self.pan_velocity =
-                    (self.pan_velocity + differential).min(Vec2::ZERO);
+            let delta_v = deceleration_direction * CAM_PAN_ACCELERATION;
+
+            let new_velocity = self.pan_velocity + delta_v;
+
+            if new_velocity.dot(self.pan_velocity) < 0.0 {
+                self.pan_velocity = Vec2::ZERO;
             } else {
-                // Handle positive dampening
-                gloo_console::log!("pos");
-                self.pan_velocity =
-                    (self.pan_velocity + differential).max(Vec2::ZERO);
+                self.pan_velocity = new_velocity;
             }
         }
         // Wireframe
@@ -191,7 +184,7 @@ impl<'a> State<'a> {
             };
         }
 
-        self.pan += self.pan_velocity;
+        self.pan += self.pan_velocity * dt / self.zoom;
     }
 
     pub fn update(&mut self) {
