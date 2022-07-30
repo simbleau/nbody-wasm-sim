@@ -7,7 +7,7 @@ use crate::sim::Body;
 use super::input::InputController;
 
 pub const INITIAL_VIEW_BOUNDS: f32 = 100.0;
-pub const CAM_PAN_SPEED: f32 = 25.0;
+pub const CAM_PAN_SPEED: f32 = 200.0;
 pub const CAM_ZOOM_SPEED: f32 = 5.0;
 pub const CAM_ROTATE_SPEED: f32 = 5.0;
 
@@ -123,22 +123,26 @@ impl<'a> State<'a> {
         if self.input_controller.is_key_active(VirtualKeyCode::W) {
             self.pan += (Quat::from_rotation_z(self.rotation)
                 * (CAM_PAN_SPEED * Vec3::Y * dt))
-                .xy();
+                .xy()
+                / self.zoom;
         }
         if self.input_controller.is_key_active(VirtualKeyCode::A) {
             self.pan -= (Quat::from_rotation_z(self.rotation)
                 * (CAM_PAN_SPEED * Vec3::X * dt))
-                .xy();
+                .xy()
+                / self.zoom;
         }
         if self.input_controller.is_key_active(VirtualKeyCode::S) {
             self.pan -= (Quat::from_rotation_z(self.rotation)
                 * (CAM_PAN_SPEED * Vec3::Y * dt))
-                .xy();
+                .xy()
+                / self.zoom;
         }
         if self.input_controller.is_key_active(VirtualKeyCode::D) {
             self.pan += (Quat::from_rotation_z(self.rotation)
                 * (CAM_PAN_SPEED * Vec3::X * dt))
-                .xy();
+                .xy()
+                / self.zoom;
         }
         // Wireframe
         if self.input_controller.is_key_pressed(VirtualKeyCode::Q) {
