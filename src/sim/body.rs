@@ -1,13 +1,15 @@
 use glam::{Mat4, Quat, Vec2};
 
 use crate::gpu_primitives::GpuTransform;
-
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Body {
     pub origin: Vec2,
     pub radius: f32,
     pub rotation: f32,
     pub elapsed: f32,
+    pub density: f32,
+    pub init_velocity: Vec2,
+    pub velocity: Vec2,
 }
 
 impl Default for Body {
@@ -17,11 +19,22 @@ impl Default for Body {
             radius: 0.5,
             elapsed: 0.0,
             rotation: 0.0,
+            init_velocity: Vec2::ZERO,
+            velocity: Vec2::ZERO,
+            density: 1.0,
         }
     }
 }
 
 impl Body {
+    pub fn area(&self) -> f32 {
+        std::f32::consts::PI * self.radius * self.radius
+    }
+
+    pub fn mass(&self) -> f32 {
+        self.area() * self.density
+    }
+
     pub fn update(&mut self, dt: f32) {
         self.elapsed += dt;
     }

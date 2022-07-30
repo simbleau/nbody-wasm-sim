@@ -1,3 +1,5 @@
+use std::sync::Mutex;
+
 use glam::{DVec2, DVec3, Mat3, Quat, UVec2, Vec2, Vec3, Vec3Swizzles};
 use instant::Instant;
 use winit::event::{ElementState, VirtualKeyCode, WindowEvent};
@@ -11,6 +13,8 @@ pub const CAM_ZOOM_SPEED: f32 = 5.0;
 pub const CAM_ROTATE_SPEED: f32 = 5.0;
 pub const CAM_PAN_SPEED: f32 = 400.0;
 pub const DAMPENING: f32 = 0.05;
+
+pub const UNIVERSAL_GRAV_CONST: f32 = 0.000000000066743;
 
 pub struct State<'a> {
     pub mouse_pos: DVec2,
@@ -192,8 +196,33 @@ impl<'a> State<'a> {
 
                 // Simulation logic
                 let dt_f32 = dt.as_secs_f32();
-                for body in self.bodies.iter_mut() {
-                    body.update(dt_f32);
+                {
+                    for body in self.bodies.iter_mut() {
+                        body.update(dt_f32);
+                    }
+                }
+
+                {
+                    let num_bodies = self.bodies.len();
+                    for j in 0..num_bodies {
+                        let body = self.bodies.get(j).unwrap();
+                        for i in 0..num_bodies {
+                            let other = self.bodies.get_mut(i).unwrap();
+
+                            if i != j {
+                                let sqr_dist = (other.origin - body.origin)
+                                    .length_squared();
+                                let force_dir =
+                                    (other.origin - body.origin).normalize();
+                                let force = force_dir
+                                    * UNIVERSAL_GRAV_CONST
+                                    * body.mass()
+                                    / sqr_dist;
+                                let acceleration = force / body.mass();
+                                other.velocity += acceleration * dt_f32;
+                            }
+                        }
+                    }
                 }
                 self.last_frame = Some(now);
 
