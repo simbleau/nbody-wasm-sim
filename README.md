@@ -1,6 +1,9 @@
 # GPU-Accelerated 2D N-Body Simulation, in WASM
 An N-body WebAssembly simulation using WebGPU.
 
+# Run
+- `trunk serve`
+
 # Progress
 In progress. Currently a research project of [@seabass247](https://github.com/seabass247) and [@simbleau](https://github.com/simbleau).
 
