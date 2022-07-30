@@ -25,6 +25,15 @@ impl Body {
     pub fn update(&mut self, dt: f32) {
         self.elapsed += dt;
     }
+
+    pub fn new(origin: Vec2, rotation: f32, radius: f32) -> Self {
+        Self {
+            origin,
+            radius,
+            rotation,
+            ..Default::default()
+        }
+    }
 }
 
 impl From<&Body> for GpuTransform {

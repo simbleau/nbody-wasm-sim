@@ -1,4 +1,4 @@
-use glam::{DVec2, DVec3, Quat, UVec2, Vec2, Vec3, Vec3Swizzles};
+use glam::{DVec2, DVec3, Mat3, Quat, UVec2, Vec2, Vec3, Vec3Swizzles};
 use instant::Instant;
 use winit::event::{ElementState, VirtualKeyCode, WindowEvent};
 
@@ -6,8 +6,10 @@ use crate::sim::Body;
 
 use super::input::InputController;
 
-pub const INITIAL_VIEW_BOUNDS: Vec2 = Vec2::new(1., 1.);
-pub const CAM_PAN_SPEED: f32 = 0.05;
+pub const INITIAL_VIEW_BOUNDS: f32 = 100.0;
+pub const CAM_PAN_SPEED: f32 = 25.0;
+pub const CAM_ZOOM_SPEED: f32 = 5.0;
+pub const CAM_ROTATE_SPEED: f32 = 5.0;
 
 pub struct State<'a> {
     pub mouse_pos: DVec2,
@@ -45,22 +47,32 @@ impl<'a> Default for State<'a> {
 
 impl<'a> State<'a> {
     pub fn new(view_size: Vec2) -> Self {
+        let zoom = if view_size.y < view_size.x {
+            view_size.y / INITIAL_VIEW_BOUNDS
+        } else {
+            view_size.x / INITIAL_VIEW_BOUNDS
+        };
+
         // Generate a bunch of bodies
+        let radius_max = 1.0;
+        let rngify = |x| (js_sys::Math::random() * x) as f32;
         let mut bodies = Vec::new();
-        for _ in 0..1 {
-            let body = Body::default();
+        for _ in 0..1000 {
+            let mut body = Body::new(Vec2::ZERO, 0.0, rngify(radius_max));
+
+            let r = INITIAL_VIEW_BOUNDS / 2.0 * rngify(1.0).sqrt();
+            let displacement = Vec3::new(r, 0.0, 0.0);
+            let direction =
+                Mat3::from_rotation_z(rngify(std::f64::consts::PI * 2.0));
+
+            body.origin = (direction * displacement).xy();
+
             bodies.push(body);
         }
 
         Self {
             pan: Vec2::new(0., 0.),
-            zoom: if (view_size.y - INITIAL_VIEW_BOUNDS.y).abs()
-                < (view_size.x / INITIAL_VIEW_BOUNDS.x).abs()
-            {
-                view_size.y / INITIAL_VIEW_BOUNDS.y
-            } else {
-                view_size.x / INITIAL_VIEW_BOUNDS.x
-            },
+            zoom,
             bodies,
             ..Default::default()
         }
@@ -91,41 +103,41 @@ impl<'a> State<'a> {
         }
     }
 
-    fn update_camera(&mut self) {
+    fn update_camera(&mut self, dt: f32) {
         // Handle input
         // Rotation
         if self.input_controller.is_key_active(VirtualKeyCode::Left) {
-            self.rotation += 0.1;
+            self.rotation += CAM_ROTATE_SPEED * dt;
         }
         if self.input_controller.is_key_active(VirtualKeyCode::Right) {
-            self.rotation -= 0.1;
+            self.rotation -= CAM_ROTATE_SPEED * dt;
         }
         // Scale
         if self.input_controller.is_key_active(VirtualKeyCode::Up) {
-            self.zoom += self.zoom * 0.1;
+            self.zoom += self.zoom * CAM_ZOOM_SPEED * dt;
         }
         if self.input_controller.is_key_active(VirtualKeyCode::Down) {
-            self.zoom -= self.zoom * 0.1;
+            self.zoom -= self.zoom * CAM_ZOOM_SPEED * dt;
         }
         // Translation
         if self.input_controller.is_key_active(VirtualKeyCode::W) {
             self.pan += (Quat::from_rotation_z(self.rotation)
-                * (CAM_PAN_SPEED * Vec3::Y))
+                * (CAM_PAN_SPEED * Vec3::Y * dt))
                 .xy();
         }
         if self.input_controller.is_key_active(VirtualKeyCode::A) {
             self.pan -= (Quat::from_rotation_z(self.rotation)
-                * (CAM_PAN_SPEED * Vec3::X))
+                * (CAM_PAN_SPEED * Vec3::X * dt))
                 .xy();
         }
         if self.input_controller.is_key_active(VirtualKeyCode::S) {
             self.pan -= (Quat::from_rotation_z(self.rotation)
-                * (CAM_PAN_SPEED * Vec3::Y))
+                * (CAM_PAN_SPEED * Vec3::Y * dt))
                 .xy();
         }
         if self.input_controller.is_key_active(VirtualKeyCode::D) {
             self.pan += (Quat::from_rotation_z(self.rotation)
-                * (CAM_PAN_SPEED * Vec3::X))
+                * (CAM_PAN_SPEED * Vec3::X * dt))
                 .xy();
         }
         // Wireframe
@@ -150,15 +162,10 @@ impl<'a> State<'a> {
         // Remain paused
         if self.paused {
             self.last_frame = Some(Instant::now());
-            self.bg_color = DVec3::default();
             return;
         }
 
-        // Handle camera input
-        self.update_camera();
-
         // Update sim
-        self.bg_color = DVec3::new(0.16, 0.33, 0.16);
         match self.last_frame {
             Some(last_frame) => {
                 let now = Instant::now();
@@ -170,6 +177,9 @@ impl<'a> State<'a> {
                     body.update(dt_f32);
                 }
                 self.last_frame = Some(now);
+
+                // Handle camera input
+                self.update_camera(dt_f32);
             }
             None => {
                 self.last_frame = Some(Instant::now());
