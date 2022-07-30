@@ -7,10 +7,10 @@ use crate::sim::Body;
 use super::input::InputController;
 
 pub const INITIAL_VIEW_BOUNDS: f32 = 100.0;
-pub const CAM_ZOOM_SPEED: f32 = 20.0;
+pub const CAM_ZOOM_SPEED: f32 = 12.0;
 pub const CAM_ROTATE_SPEED: f32 = 5.0;
 pub const CAM_MAX_PAN_SPEED: f32 = 100.0;
-pub const CAM_PAN_ACCELERATION: f32 = 5.0;
+pub const CAM_PAN_ACCELERATION: f32 = 400.0;
 pub const DAMPENING: f32 = 0.05;
 
 pub struct State<'a> {
@@ -153,12 +153,12 @@ impl<'a> State<'a> {
             VirtualKeyCode::D,
         ]) {
             // Acceleration
-            self.pan_velocity = (self.pan_velocity
-                + (acceleration_direction * CAM_PAN_ACCELERATION) / self.zoom)
-                .clamp(
-                    Vec2::splat(-CAM_MAX_PAN_SPEED),
-                    Vec2::splat(CAM_MAX_PAN_SPEED),
-                );
+            self.pan_velocity =
+                ((acceleration_direction * CAM_PAN_ACCELERATION) / self.zoom)
+                    .clamp(
+                        Vec2::splat(-CAM_MAX_PAN_SPEED),
+                        Vec2::splat(CAM_MAX_PAN_SPEED),
+                    );
         } else if self.pan_velocity.length_squared() > 0.0 {
             // Dampening
             let deceleration = -1.0 * self.pan_velocity;
