@@ -32,7 +32,7 @@ bytemuck = { version = "1.10.0", features = [ "derive" ] }
 js-sys = "0.3.58"
 
 [dependencies.web-sys]
-web-sys = "0.3.58"
+version = "0.3.58"
 features = [
     'Document',
     'Element',
