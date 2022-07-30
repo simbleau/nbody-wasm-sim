@@ -4,7 +4,7 @@ use winit::event::{ElementState, VirtualKeyCode, WindowEvent};
 
 use crate::sim::Body;
 
-pub const INITIAL_VIEW_BOUNDS: Vec2 = Vec2::new(1., 1.);
+pub const INITIAL_VIEW_BOUNDS: f32 = 1000.0;
 pub const CAM_PAN_SPEED: f32 = 0.05;
 
 pub struct State<'a> {
@@ -41,22 +41,31 @@ impl<'a> Default for State<'a> {
 
 impl<'a> State<'a> {
     pub fn new(view_size: Vec2) -> Self {
+        let zoom = if view_size.y < view_size.x {
+            view_size.y / INITIAL_VIEW_BOUNDS
+        } else {
+            view_size.x / INITIAL_VIEW_BOUNDS
+        };
+
         // Generate a bunch of bodies
+        let radius_max = 1.0;
+        let rngify = |x| (js_sys::Math::random() * x) as f32;
         let mut bodies = Vec::new();
-        for _ in 0..1 {
-            let body = Body::default();
+        for _ in 0..1000 {
+            let mut body = Body::new(Vec2::ZERO, 0.0, rngify(radius_max));
+
+            let displacement =
+                Vec2::new(rngify(INITIAL_VIEW_BOUNDS as f64 / 2.0), 0.0);
+            let direction =
+                Quat::from_rotation_z(rngify(std::f64::consts::PI * 2.0));
+
+            body.origin = (direction * displacement.extend(1.0)).xy();
             bodies.push(body);
         }
 
         Self {
             pan: Vec2::new(0., 0.),
-            zoom: if (view_size.y - INITIAL_VIEW_BOUNDS.y).abs()
-                < (view_size.x / INITIAL_VIEW_BOUNDS.x).abs()
-            {
-                view_size.y / INITIAL_VIEW_BOUNDS.y
-            } else {
-                view_size.x / INITIAL_VIEW_BOUNDS.x
-            },
+            zoom,
             bodies,
             ..Default::default()
         }
@@ -152,11 +161,9 @@ impl<'a> State<'a> {
         // Remain paused
         if self.paused {
             self.last_frame = Some(Instant::now());
-            self.bg_color = DVec3::default();
             return;
         }
 
-        self.bg_color = DVec3::new(0.16, 0.33, 0.16);
         match self.last_frame {
             Some(last_frame) => {
                 let now = Instant::now();
