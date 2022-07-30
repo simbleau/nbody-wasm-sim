@@ -47,7 +47,7 @@ impl Runtime<'_> {
                 window_id: id,
                 event: ref winevent,
             } if id == self.window.id() => {
-                self.state.input(winevent);
+                self.state.handle_input(winevent);
                 match winevent {
                     WindowEvent::Resized(physical_size) => {
                         self.context.resize(*physical_size);
