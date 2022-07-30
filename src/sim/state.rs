@@ -7,9 +7,10 @@ use crate::sim::Body;
 use super::input::InputController;
 
 pub const INITIAL_VIEW_BOUNDS: f32 = 100.0;
-pub const CAM_PAN_SPEED: f32 = 200.0;
 pub const CAM_ZOOM_SPEED: f32 = 5.0;
 pub const CAM_ROTATE_SPEED: f32 = 5.0;
+pub const CAM_MAX_PAN_SPEED: f32 = 10.0;
+pub const CAM_PAN_ACCELERATION: f32 = 0.01;
 
 pub struct State<'a> {
     pub mouse_pos: DVec2,
@@ -21,6 +22,7 @@ pub struct State<'a> {
     pub bg_color: DVec3,
     pub texture_key: &'a str,
     pub pan: Vec2,
+    pub pan_velocity: Vec2,
     pub rotation: f32,
     pub zoom: f32,
     pub input_controller: InputController,
@@ -38,6 +40,7 @@ impl<'a> Default for State<'a> {
             bg_color: DVec3::default(),
             texture_key: "moon",
             pan: Vec2::ZERO,
+            pan_velocity: Vec2::ZERO,
             rotation: 0.0,
             zoom: 100.0,
             input_controller: InputController::default(),
@@ -120,29 +123,61 @@ impl<'a> State<'a> {
             self.zoom -= self.zoom * CAM_ZOOM_SPEED * dt;
         }
         // Translation
+        let mut acceleration_vector = Vec2::ZERO;
         if self.input_controller.is_key_active(VirtualKeyCode::W) {
-            self.pan += (Quat::from_rotation_z(self.rotation)
-                * (CAM_PAN_SPEED * Vec3::Y * dt))
-                .xy()
-                / self.zoom;
+            acceleration_vector +=
+                (Quat::from_rotation_z(self.rotation) * (Vec3::Y * dt)).xy()
+                    / self.zoom;
         }
         if self.input_controller.is_key_active(VirtualKeyCode::A) {
-            self.pan -= (Quat::from_rotation_z(self.rotation)
-                * (CAM_PAN_SPEED * Vec3::X * dt))
-                .xy()
-                / self.zoom;
+            acceleration_vector -=
+                (Quat::from_rotation_z(self.rotation) * (Vec3::X * dt)).xy()
+                    / self.zoom;
         }
         if self.input_controller.is_key_active(VirtualKeyCode::S) {
-            self.pan -= (Quat::from_rotation_z(self.rotation)
-                * (CAM_PAN_SPEED * Vec3::Y * dt))
-                .xy()
-                / self.zoom;
+            acceleration_vector -=
+                (Quat::from_rotation_z(self.rotation) * (Vec3::Y * dt)).xy()
+                    / self.zoom;
         }
         if self.input_controller.is_key_active(VirtualKeyCode::D) {
-            self.pan += (Quat::from_rotation_z(self.rotation)
-                * (CAM_PAN_SPEED * Vec3::X * dt))
-                .xy()
-                / self.zoom;
+            acceleration_vector +=
+                (Quat::from_rotation_z(self.rotation) * (Vec3::X * dt)).xy()
+                    / self.zoom;
+        }
+        // Normalize
+        acceleration_vector = acceleration_vector.normalize_or_zero();
+
+        // Camera acceleration
+        if self.input_controller.is_one_of_key_active(vec![
+            VirtualKeyCode::W,
+            VirtualKeyCode::A,
+            VirtualKeyCode::S,
+            VirtualKeyCode::D,
+        ]) {
+            // Acceleration
+            self.pan_velocity = (self.pan_velocity
+                + acceleration_vector * CAM_PAN_ACCELERATION)
+                .clamp(
+                    Vec2::splat(-CAM_MAX_PAN_SPEED),
+                    Vec2::splat(CAM_MAX_PAN_SPEED),
+                );
+        } else if self.pan_velocity.length_squared() > 0.0 {
+            // Dampening
+
+            // Opposite direction * Acceleration
+            let differential =
+                -self.pan_velocity.normalize() * CAM_PAN_ACCELERATION;
+            if self.pan_velocity.length() < 0.0 {
+                // HAndle negative dampening
+                gloo_console::log!("neg");
+                self.pan_velocity =
+                    (self.pan_velocity + differential).min(Vec2::ZERO);
+            } else {
+                // Handle positive dampening
+                gloo_console::log!("pos");
+                self.pan_velocity =
+                    (self.pan_velocity + differential).max(Vec2::ZERO);
+            }
         }
         // Wireframe
         if self.input_controller.is_key_pressed(VirtualKeyCode::Q) {
@@ -155,6 +190,8 @@ impl<'a> State<'a> {
                 _ => "moon",
             };
         }
+
+        self.pan += self.pan_velocity;
     }
 
     pub fn update(&mut self) {
