@@ -5,7 +5,7 @@ use wgpu::{BindGroup, BindGroupLayout, ShaderModule, Texture};
 use winit::window::Window;
 
 use super::{frame_descriptor::FrameDescriptor, pipelines::Pipeline};
-use crate::sim::State;
+use crate::sim::{world::WORLD_EDGE_SEGMENTS, State};
 
 pub struct WgpuContext {
     pub surface: wgpu::Surface,
@@ -110,7 +110,6 @@ impl WgpuContext {
         let (_, tex_bind_group, tex_bind_group_layout) =
             self.get_texture(state.texture_key);
         let instance_buffer = frame_desc.create_instance_buffer(&self.device);
-
         // Get rendering pipeline
         let pipeline = match &state.wireframe {
             true => {
@@ -138,8 +137,30 @@ impl WgpuContext {
             }
         };
 
+        // Data for world boundaries
+        let (
+            wradius_buffer,
+            world_buffer_contents,
+            wradius_bind_group,
+            wradius_bind_group_layout,
+        ) = frame_desc.create_world_radius_binding(&self.device);
+        let world_pipeline = {
+            let pipeline_layout = self.device.create_pipeline_layout(
+                &wgpu::PipelineLayoutDescriptor {
+                    label: Some("World Pipeline Layout"),
+                    bind_group_layouts: &[
+                        &camera_bind_group_layout,
+                        &wradius_bind_group_layout,
+                    ],
+                    push_constant_ranges: &[],
+                },
+            );
+            Pipeline::World.get(self, pipeline_layout)
+        };
+
         // Execute render pass
         {
+            // Make pass
             let mut pass =
                 encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                     label: Some("Render Pass"),
@@ -157,6 +178,8 @@ impl WgpuContext {
                     )],
                     depth_stencil_attachment: None,
                 });
+
+            // Draw world data
             pass.set_pipeline(&pipeline);
             pass.set_bind_group(0, &camera_bind_group, &[]);
             if !state.wireframe {
@@ -173,11 +196,19 @@ impl WgpuContext {
                 0,
                 0..frame_desc.instances(),
             );
+
+            // Draw world boundaries
+            pass.set_pipeline(&world_pipeline);
+            pass.set_bind_group(0, &camera_bind_group, &[]);
+            pass.set_bind_group(1, &wradius_bind_group, &[]);
+            pass.draw(0..(WORLD_EDGE_SEGMENTS + 1), 0..1);
         }
 
         // Write buffers
         self.queue
             .write_buffer(&camera_buffer, 0, &camera_buffer_contents);
+        self.queue
+            .write_buffer(&wradius_buffer, 0, &world_buffer_contents);
 
         // Submit queue
         self.queue.submit(std::iter::once(encoder.finish()));

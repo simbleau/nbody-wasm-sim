@@ -14,3 +14,6 @@ pub use camera::CameraUniform;
 
 mod transform;
 pub use transform::GpuTransform;
+
+mod world_radius;
+pub use world_radius::WorldUniform;

@@ -22,8 +22,8 @@ struct InstanceInput {
 // Vertex shader
 @vertex
 fn vs_main(
-    model: Input,
-    instance: InstanceInput,
+    model: Input, // location 0
+    instance: InstanceInput, // location 1
 ) -> Output {
     let model_matrix = mat4x4<f32>(
         instance.model_matrix_0,

@@ -1,14 +1,11 @@
-use std::sync::Mutex;
-
 use glam::{DVec2, DVec3, Mat3, Quat, UVec2, Vec2, Vec3, Vec3Swizzles};
 use instant::Instant;
 use winit::event::{ElementState, VirtualKeyCode, WindowEvent};
 
 use crate::sim::Body;
 
-use super::input::InputController;
+use crate::sim::{input::InputController, world::WORLD_RADIUS};
 
-pub const INITIAL_VIEW_BOUNDS: f32 = 100.0;
 pub const CAM_ZOOM_SPEED: f32 = 5.0;
 pub const CAM_ROTATE_SPEED: f32 = 5.0;
 pub const CAM_PAN_SPEED: f32 = 400.0;
@@ -55,9 +52,9 @@ impl<'a> Default for State<'a> {
 impl<'a> State<'a> {
     pub fn new(view_size: Vec2) -> Self {
         let zoom = if view_size.y < view_size.x {
-            view_size.y / INITIAL_VIEW_BOUNDS
+            view_size.y / (WORLD_RADIUS * 2.0)
         } else {
-            view_size.x / INITIAL_VIEW_BOUNDS
+            view_size.x / (WORLD_RADIUS * 2.0)
         };
 
         // Generate a bunch of bodies
@@ -65,9 +62,10 @@ impl<'a> State<'a> {
         let rngify = |x| (js_sys::Math::random() * x) as f32;
         let mut bodies = Vec::new();
         for _ in 0..50 {
-            let mut body = Body::new(Vec2::ZERO, 0.0, rngify(radius_max));
+            let body_radius = rngify(radius_max);
+            let mut body = Body::new(Vec2::ZERO, 0.0, body_radius);
 
-            let r = INITIAL_VIEW_BOUNDS / 2.0 * rngify(1.0).sqrt();
+            let r = WORLD_RADIUS * rngify(1.0).sqrt() - body_radius;
             let displacement = Vec3::new(r, 0.0, 0.0);
             let direction =
                 Mat3::from_rotation_z(rngify(std::f64::consts::PI * 2.0));
