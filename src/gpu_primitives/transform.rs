@@ -4,10 +4,13 @@ use super::GpuPrimitive;
 use std::mem;
 
 #[repr(C)]
-#[derive(Copy, Clone, bytemuck::Pod, bytemuck::Zeroable)]
+#[derive(Copy, Clone)]
 pub struct GpuTransform {
     pub model: [[f32; 4]; 4],
 }
+
+unsafe impl bytemuck::Pod for GpuTransform {}
+unsafe impl bytemuck::Zeroable for GpuTransform {}
 
 impl GpuTransform {
     pub const BUFFER_LAYOUT: VertexBufferLayout<'static> =

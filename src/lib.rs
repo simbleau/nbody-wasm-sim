@@ -51,12 +51,21 @@ pub async fn run() {
         "wireframe.frag",
         include_str!("../assets/shaders/wireframe.frag.wgsl"),
     );
+    context.add_shader(
+        "world.vert",
+        include_str!("../assets/shaders/world.vert.wgsl"),
+    );
+    context.add_shader(
+        "world.frag",
+        include_str!("../assets/shaders/world.frag.wgsl"),
+    );
     log!("Loaded shaders");
 
+    // Load textures
     context
         .add_texture("cookie", include_bytes!("../assets/textures/cookie.png"));
-
     context.add_texture("moon", include_bytes!("../assets/textures/moon.jpg"));
+    log!("Loaded textures");
 
     // Run program
     let mut runtime = Runtime::new(context, window, dom);

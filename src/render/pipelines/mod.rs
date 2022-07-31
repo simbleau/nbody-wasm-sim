@@ -3,10 +3,11 @@ use wgpu::{PipelineLayout, RenderPipeline};
 
 mod solid;
 mod wireframe;
-
+mod world;
 pub enum Pipeline {
     Wireframe,
     Solid,
+    World,
 }
 
 impl Pipeline {
@@ -18,6 +19,7 @@ impl Pipeline {
         match self {
             Pipeline::Wireframe => wireframe::get(context, layout),
             Pipeline::Solid => solid::get(context, layout),
+            Pipeline::World => world::get(context, layout),
         }
     }
 }
