@@ -14,7 +14,7 @@ pub const CAM_ROTATE_SPEED: f32 = 5.0;
 pub const CAM_PAN_SPEED: f32 = 400.0;
 pub const DAMPENING: f32 = 0.05;
 
-pub const UNIVERSAL_GRAV_CONST: f32 = 0.000000000066743;
+pub const UNIVERSAL_GRAV_CONST: f32 = 0.000000000066743 * 100000000000000.0;
 
 pub struct State<'a> {
     pub mouse_pos: DVec2,
@@ -64,7 +64,7 @@ impl<'a> State<'a> {
         let radius_max = 1.0;
         let rngify = |x| (js_sys::Math::random() * x) as f32;
         let mut bodies = Vec::new();
-        for _ in 0..5 {
+        for _ in 0..50 {
             let mut body = Body::new(Vec2::ZERO, 0.0, rngify(radius_max));
 
             let r = INITIAL_VIEW_BOUNDS / 2.0 * rngify(1.0).sqrt();
@@ -192,19 +192,19 @@ impl<'a> State<'a> {
         match self.last_frame {
             Some(last_frame) => {
                 let now = Instant::now();
-                let dt = now - last_frame;
+                let frame_duration = now - last_frame;
 
                 // Simulation logic
-                let dt_f32 = dt.as_secs_f32();
+                let dt = frame_duration.as_secs_f32();
 
                 for body in self.bodies.iter_mut() {
-                    body.update(dt_f32);
+                    body.update(dt);
                 }
 
                 let num_bodies = self.bodies.len();
                 for i in 0..num_bodies {
                     // Get displacement
-                    let mut displacement = Vec2::ZERO;
+                    let mut velocity = Vec2::ZERO;
                     let body = &self.bodies[i];
                     for other in &self.bodies {
                         if body != other {
@@ -216,17 +216,22 @@ impl<'a> State<'a> {
                                 force_dir * UNIVERSAL_GRAV_CONST * body.mass()
                                     / sqr_dist;
                             let acceleration = force / body.mass();
-                            displacement += acceleration * dt_f32;
+                            velocity += acceleration * dt;
                         }
                     }
                     // Adjust body
-                    *&mut self.bodies[i].origin += displacement;
+                    *&mut self.bodies[i].velocity = velocity;
+                }
+
+                for body in self.bodies.iter_mut() {
+                    body.origin += body.velocity * dt;
+                    gloo_console::log!(format!("{:?}", body.velocity));
                 }
 
                 self.last_frame = Some(now);
 
                 // Handle camera input
-                self.update_camera(dt_f32);
+                self.update_camera(dt);
             }
             None => {
                 self.last_frame = Some(Instant::now());
