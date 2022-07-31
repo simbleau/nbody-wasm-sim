@@ -4,11 +4,11 @@ use wgpu::{
 
 use crate::{
     gpu_primitives::{GpuPrimitive, GpuQuad, GpuTransform},
-    sim::State,
+    render::camera::Camera,
+    sim::{world, State},
 };
 
-use super::camera::Camera;
-
+const WORLD_BOUNDARY_SEGMENTS: u32 = 4;
 pub struct FrameDescriptor {
     wireframe: bool,
     transforms: Vec<GpuTransform>,
@@ -103,5 +103,19 @@ impl FrameDescriptor {
         device: &Device,
     ) -> (Buffer, Vec<u8>, BindGroup, BindGroupLayout) {
         self.camera.bind(device)
+    }
+
+    pub fn create_world_radius_binding(
+        &self,
+        device: &Device,
+    ) -> (Buffer, Vec<u8>, BindGroup, BindGroupLayout) {
+        world::bind_world_radius(device)
+    }
+
+    pub fn create_world_boundaries_binding(
+        &self,
+        device: &Device,
+    ) -> (Buffer, Vec<u8>, BindGroup, BindGroupLayout) {
+        world::bind_world_boundaries(device)
     }
 }
