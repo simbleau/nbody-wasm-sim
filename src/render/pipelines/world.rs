@@ -1,9 +1,5 @@
 use wgpu::PipelineLayout;
 
-use crate::gpu_primitives::{
-    GpuPrimitive, WorldBoundaryUniform, WorldRadiusUniform,
-};
-
 pub(crate) fn get(
     context: &crate::render::WgpuContext,
     layout: PipelineLayout,
@@ -18,10 +14,7 @@ pub(crate) fn get(
             vertex: wgpu::VertexState {
                 module: &vert_shader,
                 entry_point: "vs_main",
-                buffers: &[
-                    WorldRadiusUniform::desc(),
-                    WorldBoundaryUniform::desc(),
-                ],
+                buffers: &[],
             },
             fragment: Some(wgpu::FragmentState {
                 module: &frag_shader,
@@ -33,7 +26,7 @@ pub(crate) fn get(
                 })],
             }),
             primitive: wgpu::PrimitiveState {
-                topology: wgpu::PrimitiveTopology::PointList,
+                topology: wgpu::PrimitiveTopology::LineStrip,
                 strip_index_format: None,
                 front_face: wgpu::FrontFace::Ccw,
                 cull_mode: Some(wgpu::Face::Back),

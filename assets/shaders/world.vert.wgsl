@@ -4,40 +4,37 @@ struct CameraUniform {
 @group(0) @binding(0)
 var<uniform> camera: CameraUniform;
 
-struct Input {
-    @location(0) position: vec3<f32>,
-}
+struct WorldUniform {
+    radius: f32,
+    boundary_segments: u32,
+    padding: vec2<f32>,
+};
+
+@group(1) @binding(0)
+var<uniform> world: WorldUniform;
 
 struct Output {
     @builtin(position) clip_position: vec4<f32>,
 };
 
-struct InstanceInput {
-    @location(2) model_matrix_0: vec4<f32>,
-    @location(3) model_matrix_1: vec4<f32>,
-    @location(4) model_matrix_2: vec4<f32>,
-    @location(5) model_matrix_3: vec4<f32>,
-};
-
 // Vertex shader
 @vertex
 fn vs_main(
-    model: Input, // location 0
-    instance: InstanceInput, // location 1
+    @builtin(vertex_index) in_vertex_index: u32
 ) -> Output {
-    let model_matrix = mat4x4<f32>(
-        instance.model_matrix_0,
-        instance.model_matrix_1,
-        instance.model_matrix_2,
-        instance.model_matrix_3,
-    );
+    var pi: f32 = 3.1415926538;
+    var i: u32 = in_vertex_index;
+
+    var delta_radians = 2.0 * pi / f32(world.boundary_segments);
+    var x: f32 = cos(delta_radians * f32(i));
+    var y: f32 = sin(delta_radians * f32(i));
 
     var out: Output;
 
-    // Local coords -> World coords
-    var world_vert: vec4<f32> = (model_matrix * vec4<f32>(model.position, 1.0));
+    var world_vert = vec4<f32>(x * world.radius, y * world.radius, 0.0, 1.0);
 
     // World coords -> Device Coordinates
     out.clip_position = camera.view_proj * world_vert;
+
     return out;
 }

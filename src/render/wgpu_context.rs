@@ -140,16 +140,10 @@ impl WgpuContext {
         // Data for world boundaries
         let (
             wradius_buffer,
-            wradius_buffer_contents,
+            world_buffer_contents,
             wradius_bind_group,
             wradius_bind_group_layout,
         ) = frame_desc.create_world_radius_binding(&self.device);
-        let (
-            wbounds_buffer,
-            wbounds_buffer_contents,
-            wbounds_bind_group,
-            wbounds_bind_group_layout,
-        ) = frame_desc.create_world_boundaries_binding(&self.device);
         let world_pipeline = {
             let pipeline_layout = self.device.create_pipeline_layout(
                 &wgpu::PipelineLayoutDescriptor {
@@ -157,7 +151,6 @@ impl WgpuContext {
                     bind_group_layouts: &[
                         &camera_bind_group_layout,
                         &wradius_bind_group_layout,
-                        &wbounds_bind_group_layout,
                     ],
                     push_constant_ranges: &[],
                 },
@@ -208,7 +201,6 @@ impl WgpuContext {
             pass.set_pipeline(&world_pipeline);
             pass.set_bind_group(0, &camera_bind_group, &[]);
             pass.set_bind_group(1, &wradius_bind_group, &[]);
-            pass.set_bind_group(2, &wbounds_bind_group, &[]);
             pass.draw(0..(WORLD_EDGE_SEGMENTS + 1), 0..1);
         }
 
@@ -216,9 +208,7 @@ impl WgpuContext {
         self.queue
             .write_buffer(&camera_buffer, 0, &camera_buffer_contents);
         self.queue
-            .write_buffer(&wradius_buffer, 0, &wradius_buffer_contents);
-        self.queue
-            .write_buffer(&wbounds_buffer, 0, &wbounds_buffer_contents);
+            .write_buffer(&wradius_buffer, 0, &world_buffer_contents);
 
         // Submit queue
         self.queue.submit(std::iter::once(encoder.finish()));

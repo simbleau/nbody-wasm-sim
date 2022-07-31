@@ -8,7 +8,6 @@ use crate::{
     sim::{world, State},
 };
 
-const WORLD_BOUNDARY_SEGMENTS: u32 = 4;
 pub struct FrameDescriptor {
     wireframe: bool,
     transforms: Vec<GpuTransform>,
@@ -109,13 +108,6 @@ impl FrameDescriptor {
         &self,
         device: &Device,
     ) -> (Buffer, Vec<u8>, BindGroup, BindGroupLayout) {
-        world::bind_world_radius(device)
-    }
-
-    pub fn create_world_boundaries_binding(
-        &self,
-        device: &Device,
-    ) -> (Buffer, Vec<u8>, BindGroup, BindGroupLayout) {
-        world::bind_world_boundaries(device)
+        world::bind_world_uniform(device)
     }
 }

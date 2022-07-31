@@ -25,22 +25,22 @@ impl InputController {
         }
         false
     }
-    pub fn is_one_of_key_pressed(&self, keys: Vec<VirtualKeyCode>) -> bool {
-        for key in keys {
-            if self.is_key_pressed(key) {
-                return true;
-            }
-        }
-        false
-    }
-    pub fn is_one_of_key_released(&self, keys: Vec<VirtualKeyCode>) -> bool {
-        for key in keys {
-            if self.is_key_released(key) {
-                return true;
-            }
-        }
-        false
-    }
+    // pub fn is_one_of_key_pressed(&self, keys: Vec<VirtualKeyCode>) -> bool {
+    //     for key in keys {
+    //         if self.is_key_pressed(key) {
+    //             return true;
+    //         }
+    //     }
+    //     false
+    // }
+    // pub fn is_one_of_key_released(&self, keys: Vec<VirtualKeyCode>) -> bool {
+    //     for key in keys {
+    //         if self.is_key_released(key) {
+    //             return true;
+    //         }
+    //     }
+    //     false
+    // }
     pub fn is_key_active(&self, key: VirtualKeyCode) -> bool {
         self.keys.contains(&key)
     }

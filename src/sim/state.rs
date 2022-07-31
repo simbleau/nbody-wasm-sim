@@ -60,9 +60,10 @@ impl<'a> State<'a> {
         let rngify = |x| (js_sys::Math::random() * x) as f32;
         let mut bodies = Vec::new();
         for _ in 0..1000 {
-            let mut body = Body::new(Vec2::ZERO, 0.0, rngify(radius_max));
+            let body_radius = rngify(radius_max);
+            let mut body = Body::new(Vec2::ZERO, 0.0, body_radius);
 
-            let r = WORLD_RADIUS / 2.0 * rngify(1.0).sqrt();
+            let r = WORLD_RADIUS * rngify(1.0).sqrt() - body_radius;
             let displacement = Vec3::new(r, 0.0, 0.0);
             let direction =
                 Mat3::from_rotation_z(rngify(std::f64::consts::PI * 2.0));
