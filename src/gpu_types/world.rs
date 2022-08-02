@@ -10,7 +10,7 @@ use crate::{
 pub struct WorldUniform {
     pub radius: f32,
     pub boundary_segments: u32,
-    pub padding: [f32; 2],
+    _padding: [f32; 2],
 }
 
 impl Default for WorldUniform {
@@ -18,7 +18,7 @@ impl Default for WorldUniform {
         Self {
             radius: WORLD_RADIUS,
             boundary_segments: WORLD_EDGE_SEGMENTS,
-            padding: [f32::default(), f32::default()],
+            _padding: [f32::default(), f32::default()],
         }
     }
 }
