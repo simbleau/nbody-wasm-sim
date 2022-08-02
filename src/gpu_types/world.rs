@@ -43,7 +43,7 @@ fn get_wradius_buffer_contents() -> Vec<u8> {
     let uniform = WorldUniform {
         radius: WORLD_RADIUS,
         boundary_segments: WORLD_EDGE_SEGMENTS,
-        padding: [0.0, 0.0],
+        _padding: [0.0, 0.0],
     };
     bytemuck::cast_slice(&[uniform]).to_vec()
 }
