@@ -31,12 +31,6 @@ impl<'a> CameraUniform<'a> {
             .camera
             .build_view_projection_matrix()
             .to_cols_array_2d();
-        //#[repr(C)]
-        //#[derive(Clone, Copy, bytemuck::Pod, bytemuck::Zeroable)]
-        //struct Data {
-        //    pub view_proj: [[f32; 4]; 4],
-        //}
-        //let camera_uniform = Data { view_proj: matrix };
         bytemuck::cast_slice(&[matrix]).to_vec()
     }
 
