@@ -1,6 +1,6 @@
 use glam::{Mat4, Quat, Vec2};
 
-use crate::gpu_primitives::GpuTransform;
+use crate::gpu_types::GpuTransform;
 
 #[derive(Clone, Debug)]
 pub struct Body {

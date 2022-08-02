@@ -1,6 +1,6 @@
 use wgpu::PipelineLayout;
 
-use crate::gpu_primitives::{GpuPrimitive, GpuQuad, GpuTransform};
+use crate::gpu_types::{GpuPrimitive, GpuQuad, GpuTransform};
 
 pub(crate) fn get(
     context: &crate::render::WgpuContext,

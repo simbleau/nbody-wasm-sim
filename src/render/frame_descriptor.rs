@@ -3,9 +3,12 @@ use wgpu::{
 };
 
 use crate::{
-    gpu_primitives::{GpuPrimitive, GpuQuad, GpuTransform},
+    gpu_types::{
+        CameraUniform, GpuPrimitive, GpuQuad, GpuTransform, GpuUniform,
+        WorldUniform,
+    },
     render::camera::Camera,
-    sim::{world, State},
+    sim::State,
 };
 
 pub struct FrameDescriptor {
@@ -101,13 +104,13 @@ impl FrameDescriptor {
         &self,
         device: &Device,
     ) -> (Buffer, Vec<u8>, BindGroup, BindGroupLayout) {
-        self.camera.bind(device)
+        CameraUniform::from(&self.camera).bind(device)
     }
 
     pub fn create_world_radius_binding(
         &self,
         device: &Device,
     ) -> (Buffer, Vec<u8>, BindGroup, BindGroupLayout) {
-        world::bind_world_uniform(device)
+        WorldUniform::default().bind(device)
     }
 }

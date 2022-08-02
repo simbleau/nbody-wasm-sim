@@ -2,9 +2,7 @@ use glam::{DVec2, DVec3, Mat3, Quat, UVec2, Vec2, Vec3, Vec3Swizzles};
 use instant::Instant;
 use winit::event::{ElementState, VirtualKeyCode, WindowEvent};
 
-use crate::sim::Body;
-
-use crate::sim::{input::InputController, world::WORLD_RADIUS};
+use crate::sim::{input::InputController, Body, WORLD_RADIUS};
 
 pub const CAM_ZOOM_SPEED: f32 = 5.0;
 pub const CAM_ROTATE_SPEED: f32 = 5.0;

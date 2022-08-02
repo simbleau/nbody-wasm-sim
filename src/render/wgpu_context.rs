@@ -4,8 +4,8 @@ use gloo_console::log;
 use wgpu::{BindGroup, BindGroupLayout, ShaderModule, Texture};
 use winit::window::Window;
 
-use super::{frame_descriptor::FrameDescriptor, pipelines::Pipeline};
-use crate::sim::{world::WORLD_EDGE_SEGMENTS, State};
+use crate::render::{frame_descriptor::FrameDescriptor, pipelines::Pipeline};
+use crate::sim::{State, WORLD_EDGE_SEGMENTS};
 
 pub struct WgpuContext {
     pub surface: wgpu::Surface,
