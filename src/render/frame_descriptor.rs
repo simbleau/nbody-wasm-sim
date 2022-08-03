@@ -1,13 +1,14 @@
+use glam::{Mat4, Quat, Vec2};
 use wgpu::{
     util::DeviceExt, BindGroup, BindGroupLayout, Buffer, Color, Device,
 };
 
 use crate::{
-    gpu_types::{
+    render::camera::Camera,
+    render::gpu_types::{
         CameraUniform, GpuPrimitive, GpuQuad, GpuTransform, GpuUniform,
         WorldUniform,
     },
-    render::camera::Camera,
     sim::State,
 };
 
@@ -22,7 +23,14 @@ impl FrameDescriptor {
     pub fn build(state: &State) -> FrameDescriptor {
         let mut transforms = Vec::new();
         for body in &state.bodies {
-            transforms.push(body.into())
+            transforms.push(GpuTransform {
+                model: Mat4::from_scale_rotation_translation(
+                    Vec2::splat(2.0 * body.radius).extend(1.0),
+                    Quat::from_rotation_z(body.rotation),
+                    body.origin.extend(1.0),
+                )
+                .to_cols_array_2d(),
+            })
         }
 
         let camera = Camera::new(

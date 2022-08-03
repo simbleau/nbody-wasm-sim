@@ -1,7 +1,7 @@
 use wgpu::{util::DeviceExt, BindGroup, BindGroupLayout, Buffer, Device};
 
 use crate::{
-    gpu_types::GpuUniform,
+    render::gpu_types::GpuUniform,
     sim::{WORLD_EDGE_SEGMENTS, WORLD_RADIUS},
 };
 

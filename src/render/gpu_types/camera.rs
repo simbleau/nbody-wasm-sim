@@ -1,6 +1,6 @@
 use wgpu::{util::DeviceExt, BindGroup, BindGroupLayout, Buffer, Device};
 
-use crate::{gpu_types::GpuUniform, render::Camera};
+use crate::render::{gpu_types::GpuUniform, Camera};
 
 pub struct CameraUniform<'a> {
     pub camera: &'a Camera,
