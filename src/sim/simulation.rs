@@ -17,7 +17,7 @@ pub fn update(state: &mut State, dt: f32) {
     update_camera(state, dt);
 }
 
-fn update_camera(state: &mut State, dt: f32) {
+pub fn update_camera(state: &mut State, dt: f32) {
     // Handle input
     // Rotation
     if state.input_controller.is_key_active(VirtualKeyCode::Left) {

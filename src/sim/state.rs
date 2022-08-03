@@ -105,23 +105,17 @@ impl<'a> State<'a> {
             self.paused = !self.paused;
         }
 
-        // Remain paused
-        if self.paused {
-            self.last_frame = Some(Instant::now());
-            return;
-        }
+        // Get delta time
+        let now = Instant::now();
+        let dt = (now - self.last_frame.unwrap_or(now)).as_secs_f32();
+        self.last_frame.replace(now);
 
-        // Update simulation
-        match self.last_frame {
-            Some(last_frame) => {
-                let now = Instant::now();
-                let dt = (now - last_frame).as_secs_f32();
-                simulation::update(self, dt);
-                self.last_frame = Some(now);
-            }
-            None => {
-                self.last_frame = Some(Instant::now());
-            }
+        if self.paused {
+            // Only update camera
+            simulation::update_camera(self, dt);
+        } else {
+            // Update simulation
+            simulation::update(self, dt);
         }
 
         // Reset input controller
