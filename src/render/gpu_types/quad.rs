@@ -1,4 +1,4 @@
-use super::{GpuPrimitive, GpuVertex};
+use crate::render::gpu_types::{GpuPrimitive, GpuVertex};
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]

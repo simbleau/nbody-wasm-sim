@@ -1,4 +1,5 @@
 mod frame_descriptor;
+mod gpu_types;
 mod pipelines;
 
 mod wgpu_context;
