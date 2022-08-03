@@ -98,7 +98,7 @@ impl WgpuContext {
         );
 
         // Create all data from the state we need for a frame
-        let frame_desc = FrameDescriptor::from(&state);
+        let frame_desc = FrameDescriptor::build(&state);
         let vertex_buffer = frame_desc.create_vertex_buffer(&self.device);
         let index_buffer = frame_desc.create_index_buffer(&self.device);
         let (
@@ -143,7 +143,7 @@ impl WgpuContext {
             world_buffer_contents,
             wradius_bind_group,
             wradius_bind_group_layout,
-        ) = frame_desc.create_world_radius_binding(&self.device);
+        ) = frame_desc.create_world_data_binding(&self.device);
         let world_pipeline = {
             let pipeline_layout = self.device.create_pipeline_layout(
                 &wgpu::PipelineLayoutDescriptor {
@@ -192,9 +192,9 @@ impl WgpuContext {
                 wgpu::IndexFormat::Uint16,
             );
             pass.draw_indexed(
-                0..frame_desc.indicies(),
+                0..frame_desc.indicies().len() as u32,
                 0,
-                0..frame_desc.instances(),
+                0..frame_desc.instances().len() as u32,
             );
 
             // Draw world boundaries
