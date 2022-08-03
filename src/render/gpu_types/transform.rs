@@ -1,7 +1,7 @@
 use wgpu::VertexBufferLayout;
-
-use super::GpuPrimitive;
 use std::mem;
+
+use crate::render::gpu_types::GpuPrimitive;
 
 #[repr(C)]
 #[derive(Copy, Clone)]

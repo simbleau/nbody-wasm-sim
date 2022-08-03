@@ -1,5 +1,4 @@
 mod dom;
-mod gpu_primitives;
 mod render;
 mod runtime;
 mod sim;

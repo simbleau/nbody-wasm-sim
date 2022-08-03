@@ -1,6 +1,6 @@
 use wgpu::VertexBufferLayout;
 
-use super::GpuPrimitive;
+use crate::render::gpu_types::GpuPrimitive;
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]

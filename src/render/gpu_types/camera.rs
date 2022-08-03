@@ -1,57 +1,19 @@
-use glam::{Mat4, Quat, Vec2};
 use wgpu::{util::DeviceExt, BindGroup, BindGroupLayout, Buffer, Device};
 
-use crate::gpu_primitives::CameraUniform;
+use crate::render::{gpu_types::GpuUniform, Camera};
 
-pub struct Camera {
-    scale: f32,
-    rotation: f32,
-    translation: Vec2,
-    view_size: Vec2,
+pub struct CameraUniform<'a> {
+    pub camera: &'a Camera,
 }
 
-impl Camera {
-    pub fn new(
-        view_size: Vec2,
-        rotation: f32,
-        translation: Vec2,
-        scale: f32,
-    ) -> Self {
-        Camera {
-            scale,
-            rotation,
-            translation,
-            view_size,
-        }
+impl<'a> From<&'a Camera> for CameraUniform<'a> {
+    fn from(c: &'a Camera) -> Self {
+        CameraUniform { camera: c }
     }
+}
 
-    pub fn build_view_projection_matrix(&self) -> Mat4 {
-        let view = Mat4::from_rotation_translation(
-            Quat::from_rotation_z(self.rotation),
-            self.translation.extend(1.0),
-        );
-
-        let (width, height) = self.view_size.into();
-        let half_width = width / 2.0;
-        let half_height = height / 2.0;
-        let left = -half_width;
-        let right = half_width;
-        let top = half_height;
-        let bottom = -half_height;
-
-        let proj = Mat4::orthographic_rh(
-            left / self.scale,
-            right / self.scale,
-            bottom / self.scale,
-            top / self.scale,
-            0.0,
-            1.0,
-        );
-
-        return proj * view.inverse();
-    }
-
-    pub fn bind(
+impl<'a> GpuUniform for CameraUniform<'a> {
+    fn bind(
         &self,
         device: &Device,
     ) -> (Buffer, Vec<u8>, BindGroup, BindGroupLayout) {
@@ -61,11 +23,15 @@ impl Camera {
         let bind_group = self.create_bind_group(&buffer, &layout, device);
         (buffer, buffer_contents, bind_group, layout)
     }
+}
 
+impl<'a> CameraUniform<'a> {
     fn get_buffer_contents(&self) -> Vec<u8> {
-        let matrix = self.build_view_projection_matrix().to_cols_array_2d();
-        let camera_uniform = CameraUniform { view_proj: matrix };
-        bytemuck::cast_slice(&[camera_uniform]).to_vec()
+        let matrix = self
+            .camera
+            .build_view_projection_matrix()
+            .to_cols_array_2d();
+        bytemuck::cast_slice(&[matrix]).to_vec()
     }
 
     fn create_bind_group(

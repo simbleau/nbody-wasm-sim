@@ -1,17 +1,8 @@
-use glam::{DVec2, DVec3, Mat3, Quat, UVec2, Vec2, Vec3, Vec3Swizzles};
+use glam::{DVec2, DVec3, Mat3, UVec2, Vec2, Vec3, Vec3Swizzles};
 use instant::Instant;
 use winit::event::{ElementState, VirtualKeyCode, WindowEvent};
 
-use crate::sim::Body;
-
-use crate::sim::{input::InputController, world::WORLD_RADIUS};
-
-pub const CAM_ZOOM_SPEED: f32 = 5.0;
-pub const CAM_ROTATE_SPEED: f32 = 5.0;
-pub const CAM_PAN_SPEED: f32 = 400.0;
-pub const DAMPENING: f32 = 0.05;
-
-pub const UNIVERSAL_GRAV_CONST: f32 = 0.000000000066743 * 100000000000000.0;
+use crate::sim::{input::InputController, simulation, Body, WORLD_RADIUS};
 
 pub struct State<'a> {
     pub mouse_pos: DVec2,
@@ -108,132 +99,23 @@ impl<'a> State<'a> {
         }
     }
 
-    fn update_camera(&mut self, dt: f32) {
-        // Handle input
-        // Rotation
-        if self.input_controller.is_key_active(VirtualKeyCode::Left) {
-            self.rotation += CAM_ROTATE_SPEED * dt;
-        }
-        if self.input_controller.is_key_active(VirtualKeyCode::Right) {
-            self.rotation -= CAM_ROTATE_SPEED * dt;
-        }
-        // Scale
-        if self.input_controller.is_key_active(VirtualKeyCode::Up) {
-            self.zoom += self.zoom * CAM_ZOOM_SPEED * dt;
-        }
-        if self.input_controller.is_key_active(VirtualKeyCode::Down) {
-            self.zoom -= self.zoom * CAM_ZOOM_SPEED * dt;
-        }
-        // Translation
-        let mut cam_direction = Vec2::ZERO;
-        if self.input_controller.is_key_active(VirtualKeyCode::W) {
-            cam_direction +=
-                (Quat::from_rotation_z(self.rotation) * (Vec3::Y)).xy();
-        }
-        if self.input_controller.is_key_active(VirtualKeyCode::A) {
-            cam_direction -=
-                (Quat::from_rotation_z(self.rotation) * (Vec3::X)).xy();
-        }
-        if self.input_controller.is_key_active(VirtualKeyCode::S) {
-            cam_direction -=
-                (Quat::from_rotation_z(self.rotation) * (Vec3::Y)).xy();
-        }
-        if self.input_controller.is_key_active(VirtualKeyCode::D) {
-            cam_direction +=
-                (Quat::from_rotation_z(self.rotation) * (Vec3::X)).xy();
-        }
-
-        // Normalize
-        cam_direction = cam_direction.normalize_or_zero();
-
-        // Camera movement
-        if self.input_controller.is_one_of_key_active(vec![
-            VirtualKeyCode::W,
-            VirtualKeyCode::A,
-            VirtualKeyCode::S,
-            VirtualKeyCode::D,
-        ]) {
-            // Move camera
-            self.pan_velocity = (cam_direction * CAM_PAN_SPEED) / self.zoom;
-        } else if self.pan_velocity.length_squared() > 0.0 {
-            // Dampen camera velocity
-            self.pan_velocity += -1.0 * self.pan_velocity * DAMPENING;
-        }
-        // Wireframe
-        if self.input_controller.is_key_pressed(VirtualKeyCode::Q) {
-            self.wireframe = !self.wireframe;
-        }
-        // Texture Change
-        if self.input_controller.is_key_released(VirtualKeyCode::E) {
-            self.texture_key = match self.texture_key {
-                "moon" => "cookie",
-                _ => "moon",
-            };
-        }
-
-        self.pan += self.pan_velocity * dt;
-    }
-
     pub fn update(&mut self) {
         // Pausing
         if self.input_controller.is_key_pressed(VirtualKeyCode::Space) {
             self.paused = !self.paused;
         }
 
-        // Remain paused
+        // Get delta time
+        let now = Instant::now();
+        let dt = (now - self.last_frame.unwrap_or(now)).as_secs_f32();
+        self.last_frame.replace(now);
+
         if self.paused {
-            self.last_frame = Some(Instant::now());
-            return;
-        }
-
-        // Update sim
-        match self.last_frame {
-            Some(last_frame) => {
-                let now = Instant::now();
-                let frame_duration = now - last_frame;
-
-                // Simulation logic
-                let dt = frame_duration.as_secs_f32();
-
-                for body in self.bodies.iter_mut() {
-                    body.update(dt);
-                }
-
-                let num_bodies = self.bodies.len();
-                for i in 0..num_bodies {
-                    // Get displacement
-                    let mut velocity = Vec2::ZERO;
-                    let body = &self.bodies[i];
-                    for other in &self.bodies {
-                        if body != other {
-                            let sqr_dist =
-                                (other.origin - body.origin).length_squared();
-                            let force_dir =
-                                (other.origin - body.origin).normalize();
-                            let force =
-                                force_dir * UNIVERSAL_GRAV_CONST * body.mass()
-                                    / sqr_dist;
-                            let acceleration = force / body.mass();
-                            velocity += acceleration * dt;
-                        }
-                    }
-                    // Adjust body
-                    *&mut self.bodies[i].velocity = velocity;
-                }
-
-                for body in self.bodies.iter_mut() {
-                    body.origin += body.velocity * dt;
-                    gloo_console::log!(format!("{:?}", body.velocity));
-                }
-
-                self.last_frame = Some(now);
-
-                // Handle camera input
-                self.update_camera(dt);
-            }
-            None => {
-                self.last_frame = Some(Instant::now());
-            }
+            // Only update camera
+            simulation::update_camera(self, dt);
+        } else {
+            // Update simulation
+            simulation::update(self, dt);
         }
 
         // Reset input controller

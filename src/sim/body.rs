@@ -1,6 +1,5 @@
-use glam::{Mat4, Quat, Vec2};
+use glam::Vec2;
 
-use crate::gpu_primitives::GpuTransform;
 #[derive(Clone, Debug, PartialEq)]
 pub struct Body {
     pub origin: Vec2,
@@ -45,19 +44,6 @@ impl Body {
             radius,
             rotation,
             ..Default::default()
-        }
-    }
-}
-
-impl From<&Body> for GpuTransform {
-    fn from(body: &Body) -> Self {
-        GpuTransform {
-            model: Mat4::from_scale_rotation_translation(
-                Vec2::splat(2.0 * body.radius).extend(1.0),
-                Quat::from_rotation_z(body.rotation),
-                body.origin.extend(1.0),
-            )
-            .to_cols_array_2d(),
         }
     }
 }

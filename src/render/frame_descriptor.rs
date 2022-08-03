@@ -1,11 +1,15 @@
+use glam::{Mat4, Quat, Vec2};
 use wgpu::{
     util::DeviceExt, BindGroup, BindGroupLayout, Buffer, Color, Device,
 };
 
 use crate::{
-    gpu_primitives::{GpuPrimitive, GpuQuad, GpuTransform},
     render::camera::Camera,
-    sim::{world, State},
+    render::gpu_types::{
+        CameraUniform, GpuPrimitive, GpuQuad, GpuTransform, GpuUniform,
+        WorldUniform,
+    },
+    sim::State,
 };
 
 pub struct FrameDescriptor {
@@ -16,11 +20,17 @@ pub struct FrameDescriptor {
 }
 
 impl FrameDescriptor {
-    pub fn from(state: &State) -> FrameDescriptor {
+    pub fn build(state: &State) -> FrameDescriptor {
         let mut transforms = Vec::new();
-
         for body in &state.bodies {
-            transforms.push(body.into())
+            transforms.push(GpuTransform {
+                model: Mat4::from_scale_rotation_translation(
+                    Vec2::splat(2.0 * body.radius).extend(1.0),
+                    Quat::from_rotation_z(body.rotation),
+                    body.origin.extend(1.0),
+                )
+                .to_cols_array_2d(),
+            })
         }
 
         let camera = Camera::new(
@@ -45,33 +55,29 @@ impl FrameDescriptor {
         }
     }
 
-    pub fn indicies(&self) -> u32 {
+    pub fn indicies(&self) -> Vec<u16> {
         match self.wireframe {
-            true => 1 as u32 * 5,
-            false => 1 as u32 * 6,
+            true => vec![0, 1, 2, 3, 0],
+            false => vec![0, 1, 2, 0, 2, 3],
         }
     }
 
-    pub fn instances(&self) -> u32 {
-        self.transforms.len() as u32
+    pub fn instances(&self) -> &Vec<GpuTransform> {
+        &self.transforms
     }
 
     pub fn create_vertex_buffer(&self, device: &Device) -> Buffer {
         device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Vertex Buffer"),
-            contents: &self.get_vertex_buffer_contents(),
+            contents: &GpuQuad.data(),
             usage: wgpu::BufferUsages::VERTEX,
         })
-    }
-
-    fn get_vertex_buffer_contents(&self) -> Vec<u8> {
-        GpuQuad.data()
     }
 
     pub fn create_index_buffer(&self, device: &Device) -> Buffer {
         device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Index Buffer"),
-            contents: bytemuck::cast_slice(&self.get_index_buffer_contents()),
+            contents: bytemuck::cast_slice(&self.indicies()),
             usage: wgpu::BufferUsages::INDEX,
         })
     }
@@ -90,24 +96,17 @@ impl FrameDescriptor {
         })
     }
 
-    fn get_index_buffer_contents(&self) -> Vec<u16> {
-        match self.wireframe {
-            true => vec![0, 1, 2, 3, 0],
-            false => vec![0, 1, 2, 0, 2, 3],
-        }
-    }
-
     pub fn create_camera_binding(
         &self,
         device: &Device,
     ) -> (Buffer, Vec<u8>, BindGroup, BindGroupLayout) {
-        self.camera.bind(device)
+        CameraUniform::from(&self.camera).bind(device)
     }
 
-    pub fn create_world_radius_binding(
+    pub fn create_world_data_binding(
         &self,
         device: &Device,
     ) -> (Buffer, Vec<u8>, BindGroup, BindGroupLayout) {
-        world::bind_world_uniform(device)
+        WorldUniform::default().bind(device)
     }
 }
