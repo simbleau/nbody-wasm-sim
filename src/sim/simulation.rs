@@ -8,9 +8,35 @@ pub const CAM_ROTATE_SPEED: f32 = 5.0;
 pub const CAM_PAN_SPEED: f32 = 400.0;
 pub const DAMPENING: f32 = 0.05;
 
+pub const PIXEL_DISTANCE_IN_METERS: f32 = 100_000_000_000.0;
+pub const UNIVERSAL_GRAV_CONST: f32 =
+    0.000000000066743 * PIXEL_DISTANCE_IN_METERS;
+
 pub fn update(state: &mut State, dt: f32) {
+    // Calculate velocity vectors
+    let num_bodies = state.bodies.len();
+    for i in 0..num_bodies {
+        // Get displacement
+        let body = &state.bodies[i];
+        let mut velocity = body.velocity;
+        for other in &state.bodies {
+            if body != other {
+                let sqr_dist =
+                    (other.position - body.position).length_squared();
+                let force_dir = (other.position - body.position).normalize();
+                let force =
+                    force_dir * UNIVERSAL_GRAV_CONST * body.mass() / sqr_dist;
+                let acceleration = force / body.mass();
+                velocity += acceleration * dt;
+            }
+        }
+        // Adjust body
+        *&mut state.bodies[i].velocity = velocity;
+    }
+
+    // Update position
     for body in state.bodies.iter_mut() {
-        body.update(dt);
+        body.position += body.velocity * dt;
     }
 
     // Handle camera input

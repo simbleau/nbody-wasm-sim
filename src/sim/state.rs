@@ -1,4 +1,4 @@
-use glam::{DVec2, DVec3, Mat3, UVec2, Vec2, Vec3, Vec3Swizzles};
+use glam::{DVec2, DVec3, Mat3, Quat, UVec2, Vec2, Vec3, Vec3Swizzles};
 use instant::Instant;
 use winit::event::{ElementState, VirtualKeyCode, WindowEvent};
 
@@ -50,18 +50,28 @@ impl<'a> State<'a> {
 
         // Generate a bunch of bodies
         let radius_max = 1.0;
+        let velocity_max_phi = 2.0 * std::f64::consts::PI;
+        let velocity_max_magnitude = 10.0;
         let rngify = |x| (js_sys::Math::random() * x) as f32;
         let mut bodies = Vec::new();
-        for _ in 0..1000 {
+        for _ in 0..50 {
             let body_radius = rngify(radius_max);
             let mut body = Body::new(Vec2::ZERO, 0.0, body_radius);
 
             let r = WORLD_RADIUS * rngify(1.0).sqrt() - body_radius;
             let displacement = Vec3::new(r, 0.0, 0.0);
-            let direction =
+            let displacement_direction =
                 Mat3::from_rotation_z(rngify(std::f64::consts::PI * 2.0));
 
-            body.origin = (direction * displacement).xy();
+            body.position = (displacement_direction * displacement).xy();
+
+            let velocity_direction =
+                Quat::from_rotation_z(rngify(velocity_max_phi));
+            let velocity_magnitude = rngify(velocity_max_magnitude);
+
+            let velocity =
+                (velocity_direction * Vec3::Y).xy() * velocity_magnitude;
+            body.velocity = velocity;
 
             bodies.push(body);
         }
