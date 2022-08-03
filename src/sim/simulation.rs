@@ -8,7 +8,7 @@ pub const CAM_ROTATE_SPEED: f32 = 5.0;
 pub const CAM_PAN_SPEED: f32 = 400.0;
 pub const DAMPENING: f32 = 0.05;
 
-pub const PIXEL_DISTANCE_IN_METERS: f32 = 100_000_000_000_000.0;
+pub const PIXEL_DISTANCE_IN_METERS: f32 = 100_000_000_000.0;
 pub const UNIVERSAL_GRAV_CONST: f32 =
     0.000000000066743 * PIXEL_DISTANCE_IN_METERS;
 
@@ -17,12 +17,13 @@ pub fn update(state: &mut State, dt: f32) {
     let num_bodies = state.bodies.len();
     for i in 0..num_bodies {
         // Get displacement
-        let mut velocity = Vec2::ZERO;
         let body = &state.bodies[i];
+        let mut velocity = body.velocity;
         for other in &state.bodies {
             if body != other {
-                let sqr_dist = (other.origin - body.origin).length_squared();
-                let force_dir = (other.origin - body.origin).normalize();
+                let sqr_dist =
+                    (other.position - body.position).length_squared();
+                let force_dir = (other.position - body.position).normalize();
                 let force =
                     force_dir * UNIVERSAL_GRAV_CONST * body.mass() / sqr_dist;
                 let acceleration = force / body.mass();
@@ -35,7 +36,7 @@ pub fn update(state: &mut State, dt: f32) {
 
     // Update position
     for body in state.bodies.iter_mut() {
-        body.origin += body.velocity * dt;
+        body.position += body.velocity * dt;
     }
 
     // Handle camera input
