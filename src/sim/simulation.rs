@@ -3,12 +3,14 @@ use winit::event::VirtualKeyCode;
 
 use crate::sim::State;
 
+use super::physics::get_collision;
+
 pub const CAM_ZOOM_SPEED: f32 = 5.0;
 pub const CAM_ROTATE_SPEED: f32 = 5.0;
 pub const CAM_PAN_SPEED: f32 = 400.0;
 pub const DAMPENING: f32 = 0.05;
 
-pub const PIXEL_DISTANCE_IN_METERS: f32 = 100_000_000_000.0;
+pub const PIXEL_DISTANCE_IN_METERS: f32 = 10_000_000_000.0;
 pub const UNIVERSAL_GRAV_CONST: f32 =
     0.000000000066743 * PIXEL_DISTANCE_IN_METERS;
 
@@ -32,6 +34,19 @@ pub fn update(state: &mut State, dt: f32) {
         }
         // Adjust body
         *&mut state.bodies[i].velocity = velocity;
+    }
+
+    'A: for i in 0..num_bodies {
+        let body = &state.bodies[i];
+        for j in i + 1..num_bodies {
+            let other = &state.bodies[j];
+            if let Some(collision) = get_collision(body, other) {
+                *&mut state.bodies[i].velocity = collision.v1_final;
+                *&mut state.bodies[j].velocity = collision.v2_final;
+
+                continue 'A;
+            }
+        }
     }
 
     // Update position
