@@ -47,7 +47,6 @@ impl<'a> State<'a> {
         };
 
         Self {
-            pan: Vec2::new(0., 0.),
             zoom,
             ..Default::default()
         }
