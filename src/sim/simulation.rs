@@ -21,8 +21,7 @@ pub const TIME_STEP: f32 = 500_000.0; // Seconds
 pub const PIXEL_DISTANCE: f32 = 500_000_000_000.0; // Meters
 pub const SPEED_OF_LIGHT: f32 = 299_792_458.0 / PIXEL_DISTANCE;
 pub const UNIVERSAL_GRAVITY: f32 = 0.000000000066743 * PIXEL_DISTANCE;
-pub const TERMINAL_VELOCITY: Vec2 =
-    Vec2::new(SPEED_OF_LIGHT * TIME_STEP, SPEED_OF_LIGHT * TIME_STEP);
+pub const TERMINAL_VELOCITY: Vec2 = Vec2::splat(SPEED_OF_LIGHT * TIME_STEP);
 
 pub struct Simulation<'a> {
     pub state: State<'a>,
