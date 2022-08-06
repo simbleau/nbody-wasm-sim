@@ -6,24 +6,24 @@ use winit::window::Window;
 
 use crate::dom::Dom;
 use crate::render::WgpuContext;
-use crate::sim::{Simulation, State, WORLD_RADIUS};
+use crate::sim::{Simulation, WORLD_RADIUS};
 
-pub struct Runtime<'a> {
+pub struct Runtime {
     context: WgpuContext,
     window: Window,
     dom: Dom,
-    sim: Simulation<'a>,
+    sim: Simulation,
 }
 
-impl Runtime<'_> {
+impl Runtime {
     pub fn new(context: WgpuContext, window: Window, dom: Dom) -> Self {
-        let mut state = State::default();
+        let mut sim = Simulation::new(100);
         // Zoom into sim
         let view_size = Vec2::new(
             window.inner_size().width as f32,
             window.inner_size().height as f32,
         );
-        state.zoom = if view_size.y < view_size.x {
+        sim.state.zoom = if view_size.y < view_size.x {
             view_size.y / (WORLD_RADIUS * 2.0)
         } else {
             view_size.x / (WORLD_RADIUS * 2.0)
@@ -33,7 +33,7 @@ impl Runtime<'_> {
             context,
             window,
             dom,
-            sim: Simulation::new(100, state),
+            sim,
         }
     }
 

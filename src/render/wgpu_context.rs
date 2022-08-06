@@ -111,7 +111,7 @@ impl WgpuContext {
             camera_bind_group_layout,
         ) = frame_desc.create_camera_binding(&self.device);
         let (_, tex_bind_group, tex_bind_group_layout) =
-            self.get_texture(sim.state.texture_key);
+            self.get_texture(&sim.state.texture_key);
         let instance_buffer = frame_desc.create_instance_buffer(&self.device);
         // Get rendering pipeline
         let pipeline = match &sim.state.wireframe {

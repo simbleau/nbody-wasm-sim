@@ -4,6 +4,7 @@ use rapier2d::prelude::*;
 use super::{Body, UNIVERSAL_GRAVITY};
 
 pub struct PhysicsContext {
+    pub bodies: Vec<Body>,
     pub integration_parameters: IntegrationParameters,
     pub physics_pipeline: PhysicsPipeline,
     pub island_manager: IslandManager,
@@ -15,27 +16,58 @@ pub struct PhysicsContext {
 }
 
 impl PhysicsContext {
-    pub fn update(&mut self, bodies: &Vec<Body>, dt: f32) {
+    pub fn new() -> Self {
+        Self {
+            bodies: Vec::new(),
+            integration_parameters: IntegrationParameters::default(),
+            physics_pipeline: PhysicsPipeline::new(),
+            island_manager: IslandManager::new(),
+            broad_phase: BroadPhase::new(),
+            narrow_phase: NarrowPhase::new(),
+            ccd_solver: CCDSolver::new(),
+            rigid_body_set: RigidBodySet::new(),
+            collider_set: ColliderSet::new(),
+        }
+    }
+
+    pub fn create_body(
+        &mut self,
+        rb: impl Into<RigidBody>,
+        coll: impl Into<Collider>,
+    ) {
+        let rigid_body_handle = self.rigid_body_set.insert(rb);
+        let collider_handle = self.collider_set.insert_with_parent(
+            coll,
+            rigid_body_handle,
+            &mut self.rigid_body_set,
+        );
+        let body = Body {
+            rigid_body_handle,
+            collider_handle,
+        };
+        self.bodies.push(body);
+    }
+
+    pub fn step(&mut self, dt: f32) {
         self.integration_parameters.dt = dt;
 
         // Calculate velocity vectors
-        let num_bodies = bodies.len();
+        let num_bodies = self.bodies.len();
         for i in 0..num_bodies {
             // Get displacement
-            let body = &bodies[i];
+            let body = &self.bodies[i];
             let mut force = Vec2::ZERO;
-            for other in bodies {
+            for other in &self.bodies {
                 if body != other {
-                    let sqr_dist = (other.position(&self)
-                        - body.position(&self))
-                    .length_squared();
-                    let force_dir = (other.position(&self)
-                        - body.position(&self))
+                    let sqr_dist = (other.position(self) - body.position(self))
+                        .length_squared();
+                    let force_dir = (other.position(self)
+                        - body.position(self))
                     .normalize();
                     force += force_dir
                         * UNIVERSAL_GRAVITY
-                        * body.mass(&self)
-                        * other.mass(&self)
+                        * body.mass(self)
+                        * other.mass(self)
                         / sqr_dist;
                 }
             }

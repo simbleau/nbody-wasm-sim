@@ -4,14 +4,14 @@ use winit::event::{ElementState, WindowEvent};
 
 use crate::sim::input::InputController;
 
-pub struct State<'a> {
+pub struct State {
     pub mouse_pos: DVec2,
     pub view_size: UVec2,
     pub last_frame: Option<Instant>,
     pub wireframe: bool,
     pub paused: bool,
     pub bg_color: DVec3,
-    pub texture_key: &'a str,
+    pub texture_key: String,
     pub pan: Vec2,
     pub pan_velocity: Vec2,
     pub rotation: f32,
@@ -19,7 +19,7 @@ pub struct State<'a> {
     pub input_controller: InputController,
 }
 
-impl<'a> Default for State<'a> {
+impl Default for State {
     fn default() -> Self {
         Self {
             mouse_pos: DVec2::default(),
@@ -28,7 +28,7 @@ impl<'a> Default for State<'a> {
             wireframe: false,
             paused: false,
             bg_color: DVec3::default(),
-            texture_key: "moon",
+            texture_key: "moon".to_owned(),
             pan: Vec2::ZERO,
             pan_velocity: Vec2::ZERO,
             rotation: 0.0,
@@ -38,7 +38,7 @@ impl<'a> Default for State<'a> {
     }
 }
 
-impl<'a> State<'a> {
+impl State {
     pub fn handle_input(&mut self, event: &WindowEvent) {
         // We have no events to handle currently
         match event {

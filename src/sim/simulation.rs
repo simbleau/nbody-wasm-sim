@@ -1,10 +1,11 @@
+use std::ops::Mul;
+
 use glam::{Mat3, Quat, Vec2, Vec3, Vec3Swizzles};
 use instant::Instant;
 use rapier2d::prelude::*;
-use std::ops::Mul;
 use winit::event::VirtualKeyCode;
 
-use crate::sim::{Body, State, WORLD_RADIUS};
+use crate::sim::{State, WORLD_RADIUS};
 
 use super::physics::PhysicsContext;
 
@@ -18,23 +19,20 @@ pub const FRICTION: f32 = 0.8;
 pub const PIXEL_DISTANCE: f32 = 100_000_000_000.0; // Meters
 pub const UNIVERSAL_GRAVITY: f32 = 0.000000000066743 * PIXEL_DISTANCE;
 
-pub struct Simulation<'a> {
-    pub state: State<'a>,
-    pub bodies: Vec<Body>,
+pub struct Simulation {
+    pub state: State,
     pub physics_context: PhysicsContext,
 }
 
-impl<'a> Simulation<'a> {
-    pub fn new(num_bodies: u32, state: State<'a>) -> Self {
-        let mut rigid_body_set = RigidBodySet::new();
-        let mut collider_set = ColliderSet::new();
-
+impl Simulation {
+    pub fn new(num_bodies: usize) -> Self {
         // Generate a bunch of bodies
         let radius_max = 1.0;
-        let angvel_max = 0.0 * (2.0 * std::f64::consts::PI);
-        let linvel_max = 3.0;
+        let angvel_max = 0.1 * (2.0 * std::f64::consts::PI);
+        let linvel_max = 2.0;
         let rngify = |x| (js_sys::Math::random() * x) as f32;
-        let mut bodies = vec![];
+
+        let mut physics_context = PhysicsContext::new();
         for _ in 0..num_bodies {
             // Calculate radius
             let rotation = rngify(2.0 * std::f64::consts::PI);
@@ -54,54 +52,23 @@ impl<'a> Simulation<'a> {
             // Calculate initial angular velocity
             let angvel = rngify(angvel_max);
 
-            // Create physics components
+            // Bodies
             let rigid_body = RigidBodyBuilder::new(RigidBodyType::Dynamic)
                 .translation(vector![position.x, position.y])
                 .linvel(vector![linvel.x, linvel.y])
                 .angvel(angvel)
-                .ccd_enabled(false)
+                .ccd_enabled(true)
                 .rotation(rotation)
                 .build();
             let collider = ColliderBuilder::ball(radius)
                 .restitution(RESTITUTION)
                 .friction(FRICTION)
                 .build();
-            let rigid_body_handle = rigid_body_set.insert(rigid_body);
-            let collider_handle = collider_set.insert_with_parent(
-                collider,
-                rigid_body_handle,
-                &mut rigid_body_set,
-            );
-
-            let body = Body {
-                rigid_body_handle,
-                collider_handle,
-            };
-            bodies.push(body);
+            physics_context.create_body(rigid_body, collider);
         }
 
-        /* Create other structures necessary for the simulation. */
-        let integration_parameters = IntegrationParameters::default();
-        let physics_pipeline = PhysicsPipeline::new();
-        let island_manager = IslandManager::new();
-        let broad_phase = BroadPhase::new();
-        let narrow_phase = NarrowPhase::new();
-        let ccd_solver = CCDSolver::new();
-
-        let physics_context = PhysicsContext {
-            integration_parameters,
-            physics_pipeline,
-            island_manager,
-            broad_phase,
-            narrow_phase,
-            ccd_solver,
-            rigid_body_set,
-            collider_set,
-        };
-
         Self {
-            state,
-            bodies,
+            state: State::default(),
             physics_context,
         }
     }
@@ -122,7 +89,7 @@ impl<'a> Simulation<'a> {
         self.state.last_frame.replace(now);
 
         if !self.state.paused {
-            self.physics_context.update(&self.bodies, dt);
+            self.physics_context.step(dt);
         }
 
         self.update_camera(dt);
@@ -189,9 +156,9 @@ impl<'a> Simulation<'a> {
         }
         // Texture Change
         if state.input_controller.is_key_released(VirtualKeyCode::E) {
-            state.texture_key = match state.texture_key {
-                "moon" => "cookie",
-                _ => "moon",
+            state.texture_key = match &state.texture_key as &str {
+                "moon" => "cookie".to_owned(),
+                _ => "moon".to_owned(),
             };
         }
 
