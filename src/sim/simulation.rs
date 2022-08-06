@@ -6,13 +6,10 @@ use winit::event::VirtualKeyCode;
 
 use crate::sim::{Body, State, WORLD_RADIUS};
 
-use super::physics::get_collision;
-
 pub const CAM_ZOOM_SPEED: f32 = 5.0;
 pub const CAM_ROTATE_SPEED: f32 = 5.0;
 pub const CAM_PAN_SPEED: f32 = 400.0;
 pub const DAMPENING: f32 = 0.05;
-
 
 pub const RESTITUTION: f32 = 0.8;
 pub const FRICTION: f32 = 0.8;
@@ -86,6 +83,7 @@ impl<'a> Simulation<'a> {
                 collider_handle,
             };
             bodies.push(body);
+        }
 
         /* Create other structures necessary for the simulation. */
         let integration_parameters = IntegrationParameters::default();
