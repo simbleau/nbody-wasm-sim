@@ -2,8 +2,9 @@ use glam::Vec2;
 use nalgebra::{Complex, Unit};
 use rapier2d::prelude::*;
 
-use super::simulation::Simulation;
+use crate::sim::simulation::Simulation;
 
+#[derive(PartialEq)]
 pub struct Body {
     pub rigid_body_handle: RigidBodyHandle,
     pub collider_handle: ColliderHandle,

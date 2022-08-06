@@ -9,4 +9,5 @@ pub use state::State;
 
 pub mod input;
 
-pub mod simulation;
+mod simulation;
+pub use simulation::*;

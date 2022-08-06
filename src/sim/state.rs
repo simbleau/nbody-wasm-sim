@@ -2,7 +2,7 @@ use glam::{DVec2, DVec3, UVec2, Vec2};
 use instant::Instant;
 use winit::event::{ElementState, WindowEvent};
 
-use crate::sim::{input::InputController, WORLD_RADIUS};
+use crate::sim::input::InputController;
 
 pub struct State<'a> {
     pub mouse_pos: DVec2,
@@ -39,19 +39,6 @@ impl<'a> Default for State<'a> {
 }
 
 impl<'a> State<'a> {
-    pub fn new(view_size: Vec2) -> Self {
-        let zoom = if view_size.y < view_size.x {
-            view_size.y / (WORLD_RADIUS * 2.0)
-        } else {
-            view_size.x / (WORLD_RADIUS * 2.0)
-        };
-
-        Self {
-            zoom,
-            ..Default::default()
-        }
-    }
-
     pub fn handle_input(&mut self, event: &WindowEvent) {
         // We have no events to handle currently
         match event {

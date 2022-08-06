@@ -1,31 +1,25 @@
-use std::ops::{Mul, MulAssign};
-
 use glam::{Mat3, Quat, Vec2, Vec3, Vec3Swizzles};
 use instant::Instant;
 use rapier2d::prelude::*;
+use std::ops::Mul;
 use winit::event::VirtualKeyCode;
 
-use crate::sim::{Body, State};
-
-use super::WORLD_RADIUS;
+use crate::sim::{Body, State, WORLD_RADIUS};
 
 pub const CAM_ZOOM_SPEED: f32 = 5.0;
 pub const CAM_ROTATE_SPEED: f32 = 5.0;
 pub const CAM_PAN_SPEED: f32 = 400.0;
 pub const DAMPENING: f32 = 0.05;
 
-pub const DENSITY: f32 = 0.1;
-pub const COLLISION_RESTITUTION: f32 = 0.7;
-
-pub const TIME_STEP: f32 = 500_000.0; // Seconds
-pub const PIXEL_DISTANCE: f32 = 500_000_000_000.0; // Meters
-pub const SPEED_OF_LIGHT: f32 = 299_792_458.0 / PIXEL_DISTANCE;
+pub const RESTITUTION: f32 = 0.8;
+pub const FRICTION: f32 = 0.8;
+pub const PIXEL_DISTANCE: f32 = 100_000_000_000.0; // Meters
 pub const UNIVERSAL_GRAVITY: f32 = 0.000000000066743 * PIXEL_DISTANCE;
-pub const TERMINAL_VELOCITY: Vec2 = Vec2::splat(SPEED_OF_LIGHT * TIME_STEP);
 
 pub struct Simulation<'a> {
     pub state: State<'a>,
     pub bodies: Vec<Body>,
+    integration_parameters: IntegrationParameters,
     physics_pipeline: PhysicsPipeline,
     island_manager: IslandManager,
     broad_phase: BroadPhase,
@@ -42,8 +36,8 @@ impl<'a> Simulation<'a> {
 
         // Generate a bunch of bodies
         let radius_max = 1.0;
-        let angvel_max = 1.0 * (2.0 * std::f64::consts::PI);
-        let linvel_max = 10.0;
+        let angvel_max = 0.0 * (2.0 * std::f64::consts::PI);
+        let linvel_max = 3.0;
         let rngify = |x| (js_sys::Math::random() * x) as f32;
         let mut bodies = vec![];
         for _ in 0..num_bodies {
@@ -70,11 +64,12 @@ impl<'a> Simulation<'a> {
                 .translation(vector![position.x, position.y])
                 .linvel(vector![linvel.x, linvel.y])
                 .angvel(angvel)
-                .ccd_enabled(true)
+                .ccd_enabled(false)
                 .rotation(rotation)
                 .build();
             let collider = ColliderBuilder::ball(radius)
-                .restitution(COLLISION_RESTITUTION)
+                .restitution(RESTITUTION)
+                .friction(FRICTION)
                 .build();
             let rigid_body_handle = rigid_body_set.insert(rigid_body);
             let collider_handle = collider_set.insert_with_parent(
@@ -91,6 +86,7 @@ impl<'a> Simulation<'a> {
         }
 
         /* Create other structures necessary for the simulation. */
+        let integration_parameters = IntegrationParameters::default();
         let physics_pipeline = PhysicsPipeline::new();
         let island_manager = IslandManager::new();
         let broad_phase = BroadPhase::new();
@@ -100,6 +96,7 @@ impl<'a> Simulation<'a> {
         Self {
             state,
             bodies,
+            integration_parameters,
             physics_pipeline,
             island_manager,
             broad_phase,
@@ -111,10 +108,40 @@ impl<'a> Simulation<'a> {
     }
 
     pub fn step(&mut self, dt: f32) {
+        self.integration_parameters.dt = dt;
+
+        // Calculate velocity vectors
+        let num_bodies = self.bodies.len();
+        for i in 0..num_bodies {
+            // Get displacement
+            let body = &self.bodies[i];
+            let mut force = Vec2::ZERO;
+            for other in &self.bodies {
+                if body != other {
+                    let sqr_dist = (other.position(self) - body.position(self))
+                        .length_squared();
+                    let force_dir = (other.position(self)
+                        - body.position(self))
+                    .normalize();
+                    force += force_dir
+                        * UNIVERSAL_GRAVITY
+                        * body.mass(self)
+                        * other.mass(self)
+                        / sqr_dist;
+                }
+            }
+
+            // Apply gravity
+            let rigid_body =
+                self.rigid_body_set.get_mut(body.rigid_body_handle).unwrap();
+            rigid_body.reset_forces(true);
+            rigid_body.add_force(vector![force.x, force.y], true);
+        }
+
         // Calculate velocity vectors
         self.physics_pipeline.step(
             &vector![0.0, 0.0],
-            &IntegrationParameters::default(),
+            &self.integration_parameters,
             &mut self.island_manager,
             &mut self.broad_phase,
             &mut self.narrow_phase,
@@ -144,7 +171,6 @@ impl<'a> Simulation<'a> {
         self.state.last_frame.replace(now);
 
         if !self.state.paused {
-            // Only update camera
             self.step(dt);
         }
         self.update_camera(dt);

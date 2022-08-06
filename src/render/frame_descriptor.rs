@@ -1,4 +1,4 @@
-use glam::{Mat4, Quat, Vec2, Vec3};
+use glam::{Mat4, Quat, Vec2};
 use wgpu::{
     util::DeviceExt, BindGroup, BindGroupLayout, Buffer, Color, Device,
 };
@@ -9,7 +9,7 @@ use crate::{
         CameraUniform, GpuPrimitive, GpuQuad, GpuTransform, GpuUniform,
         WorldUniform,
     },
-    sim::simulation::Simulation,
+    sim::Simulation,
 };
 
 pub struct FrameDescriptor {
