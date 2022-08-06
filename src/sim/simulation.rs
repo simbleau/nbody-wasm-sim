@@ -42,12 +42,13 @@ impl<'a> Simulation<'a> {
 
         // Generate a bunch of bodies
         let radius_max = 1.0;
-        let angvel_max = 1.0;
+        let angvel_max = 1.0 * (2.0 * std::f64::consts::PI);
         let linvel_max = 10.0;
         let rngify = |x| (js_sys::Math::random() * x) as f32;
         let mut bodies = vec![];
         for _ in 0..num_bodies {
             // Calculate radius
+            let rotation = rngify(2.0 * std::f64::consts::PI);
             let radius = rngify(radius_max);
 
             // Calculate initial world position as polar coordinates
@@ -70,6 +71,7 @@ impl<'a> Simulation<'a> {
                 .linvel(vector![linvel.x, linvel.y])
                 .angvel(angvel)
                 .ccd_enabled(true)
+                .rotation(rotation)
                 .build();
             let collider = ColliderBuilder::ball(radius)
                 .restitution(COLLISION_RESTITUTION)

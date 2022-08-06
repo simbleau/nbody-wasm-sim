@@ -30,9 +30,8 @@ impl Body {
         sim.rigid_body_set
             .get(self.rigid_body_handle)
             .unwrap()
-            .position()
-            .rotation
-            .norm()
+            .rotation()
+            .angle()
     }
 
     pub fn x(&self, sim: &Simulation) -> f32 {
