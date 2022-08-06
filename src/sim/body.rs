@@ -1,4 +1,5 @@
-use nalgebra::Normed;
+use glam::Vec2;
+use nalgebra::{Complex, Unit};
 use rapier2d::prelude::*;
 
 use super::simulation::Simulation;
@@ -19,36 +20,26 @@ impl Body {
     pub fn radius(&self, sim: &Simulation) -> f32 {
         sim.collider_set
             .get(self.collider_handle)
+            .map(Collider::shape)
+            .map(<dyn shape::Shape>::as_ball)
+            .flatten()
+            .map(|ball| ball.radius)
             .unwrap()
-            .shape()
-            .as_ball()
-            .unwrap()
-            .radius
     }
 
     pub fn rotation(&self, sim: &Simulation) -> f32 {
         sim.rigid_body_set
             .get(self.rigid_body_handle)
+            .map(RigidBody::rotation)
+            .map(Unit::<Complex<f32>>::angle)
             .unwrap()
-            .rotation()
-            .angle()
     }
 
-    pub fn x(&self, sim: &Simulation) -> f32 {
+    pub fn position(&self, sim: &Simulation) -> Vec2 {
         sim.rigid_body_set
             .get(self.rigid_body_handle)
+            .map(RigidBody::position)
+            .map(|p| Vec2::new(p.translation.x, p.translation.y))
             .unwrap()
-            .position()
-            .translation
-            .x
-    }
-
-    pub fn y(&self, sim: &Simulation) -> f32 {
-        sim.rigid_body_set
-            .get(self.rigid_body_handle)
-            .unwrap()
-            .position()
-            .translation
-            .y
     }
 }
