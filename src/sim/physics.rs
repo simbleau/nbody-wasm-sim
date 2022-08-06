@@ -48,9 +48,7 @@ impl PhysicsContext {
         self.bodies.push(body);
     }
 
-    pub fn step(&mut self, dt: f32) {
-        self.integration_parameters.dt = dt;
-
+    pub fn step(&mut self) {
         // Calculate velocity vectors
         let num_bodies = self.bodies.len();
         for i in 0..num_bodies {

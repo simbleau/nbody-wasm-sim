@@ -74,7 +74,7 @@ impl Simulation {
     }
 
     pub fn update(&mut self) {
-        // Pausing
+        // Check for pause key
         if self
             .state
             .input_controller
@@ -83,15 +83,17 @@ impl Simulation {
             self.state.paused = !self.state.paused;
         }
 
-        // Get delta time
+        // Step simulation
+        if !self.state.paused {
+            self.physics_context.step();
+        }
+
+        // Update last frame, get delta time
         let now = Instant::now();
         let dt = (now - self.state.last_frame.unwrap_or(now)).as_secs_f32();
         self.state.last_frame.replace(now);
 
-        if !self.state.paused {
-            self.physics_context.step(dt);
-        }
-
+        // Control camera
         self.update_camera(dt);
 
         // Reset input controller
