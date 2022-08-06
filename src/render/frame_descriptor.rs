@@ -9,7 +9,7 @@ use crate::{
         CameraUniform, GpuPrimitive, GpuQuad, GpuTransform, GpuUniform,
         WorldUniform,
     },
-    sim::{simulation::Simulation, State},
+    sim::simulation::Simulation,
 };
 
 pub struct FrameDescriptor {

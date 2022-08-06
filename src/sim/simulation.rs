@@ -52,7 +52,7 @@ impl<'a> Simulation<'a> {
             let radius = rngify(radius_max);
 
             // Calculate initial world position as polar coordinates
-            let r = rngify((WORLD_RADIUS - radius) as f64).sqrt();
+            let r = WORLD_RADIUS * rngify(1.0).sqrt() - radius;
             let theta = rngify(2.0 * std::f64::consts::PI);
             let position = Mat3::from_rotation_z(theta) * Vec3::X.mul(r);
 

@@ -1,10 +1,8 @@
-use glam::{DVec2, DVec3, Mat3, Quat, UVec2, Vec2, Vec3, Vec3Swizzles};
+use glam::{DVec2, DVec3, UVec2, Vec2};
 use instant::Instant;
-use winit::event::{ElementState, VirtualKeyCode, WindowEvent};
+use winit::event::{ElementState, WindowEvent};
 
-use crate::sim::{input::InputController, Body, WORLD_RADIUS};
-
-use super::simulation::Simulation;
+use crate::sim::{input::InputController, WORLD_RADIUS};
 
 pub struct State<'a> {
     pub mouse_pos: DVec2,

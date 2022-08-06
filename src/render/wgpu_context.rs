@@ -6,7 +6,7 @@ use winit::dpi::PhysicalSize;
 
 use crate::render::{frame_descriptor::FrameDescriptor, pipelines::Pipeline};
 use crate::sim::simulation::Simulation;
-use crate::sim::{State, WORLD_EDGE_SEGMENTS};
+use crate::sim::WORLD_EDGE_SEGMENTS;
 
 pub struct WgpuContext {
     pub surface: wgpu::Surface,

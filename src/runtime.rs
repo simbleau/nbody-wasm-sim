@@ -27,7 +27,7 @@ impl Runtime<'_> {
             context,
             window,
             dom,
-            sim: Simulation::new(3, state),
+            sim: Simulation::new(100, state),
         }
     }
 
