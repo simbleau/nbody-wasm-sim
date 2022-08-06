@@ -5,6 +5,7 @@ use wgpu::{BindGroup, BindGroupLayout, ShaderModule, Texture};
 use winit::dpi::PhysicalSize;
 
 use crate::render::{frame_descriptor::FrameDescriptor, pipelines::Pipeline};
+use crate::sim::simulation::Simulation;
 use crate::sim::{State, WORLD_EDGE_SEGMENTS};
 
 pub struct WgpuContext {
@@ -83,7 +84,10 @@ impl WgpuContext {
         }
     }
 
-    pub fn render(&mut self, state: &State) -> Result<(), wgpu::SurfaceError> {
+    pub fn render(
+        &mut self,
+        sim: &Simulation,
+    ) -> Result<(), wgpu::SurfaceError> {
         // Get the surface texture we will draw on
         let output = self.surface.get_current_texture()?;
         let view = output
@@ -98,7 +102,7 @@ impl WgpuContext {
         );
 
         // Create all data from the state we need for a frame
-        let frame_desc = FrameDescriptor::build(&state);
+        let frame_desc = FrameDescriptor::build(sim);
         let vertex_buffer = frame_desc.create_vertex_buffer(&self.device);
         let index_buffer = frame_desc.create_index_buffer(&self.device);
         let (
@@ -108,10 +112,10 @@ impl WgpuContext {
             camera_bind_group_layout,
         ) = frame_desc.create_camera_binding(&self.device);
         let (_, tex_bind_group, tex_bind_group_layout) =
-            self.get_texture(state.texture_key);
+            self.get_texture(sim.state.texture_key);
         let instance_buffer = frame_desc.create_instance_buffer(&self.device);
         // Get rendering pipeline
-        let pipeline = match &state.wireframe {
+        let pipeline = match &sim.state.wireframe {
             true => {
                 let pipeline_layout = self.device.create_pipeline_layout(
                     &wgpu::PipelineLayoutDescriptor {
@@ -182,7 +186,7 @@ impl WgpuContext {
             // Draw world data
             pass.set_pipeline(&pipeline);
             pass.set_bind_group(0, &camera_bind_group, &[]);
-            if !state.wireframe {
+            if !sim.state.wireframe {
                 pass.set_bind_group(1, tex_bind_group, &[]);
             }
             pass.set_vertex_buffer(0, vertex_buffer.slice(..));
