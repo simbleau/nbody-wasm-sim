@@ -6,6 +6,8 @@ use winit::event::VirtualKeyCode;
 
 use crate::sim::{Body, State, WORLD_RADIUS};
 
+use super::physics::PhysicsContext;
+
 pub const CAM_ZOOM_SPEED: f32 = 5.0;
 pub const CAM_ROTATE_SPEED: f32 = 5.0;
 pub const CAM_PAN_SPEED: f32 = 400.0;
@@ -19,14 +21,7 @@ pub const UNIVERSAL_GRAVITY: f32 = 0.000000000066743 * PIXEL_DISTANCE;
 pub struct Simulation<'a> {
     pub state: State<'a>,
     pub bodies: Vec<Body>,
-    integration_parameters: IntegrationParameters,
-    physics_pipeline: PhysicsPipeline,
-    island_manager: IslandManager,
-    broad_phase: BroadPhase,
-    narrow_phase: NarrowPhase,
-    ccd_solver: CCDSolver,
-    pub(crate) rigid_body_set: RigidBodySet,
-    pub(crate) collider_set: ColliderSet,
+    pub physics_context: PhysicsContext,
 }
 
 impl<'a> Simulation<'a> {
@@ -93,9 +88,7 @@ impl<'a> Simulation<'a> {
         let narrow_phase = NarrowPhase::new();
         let ccd_solver = CCDSolver::new();
 
-        Self {
-            state,
-            bodies,
+        let physics_context = PhysicsContext {
             integration_parameters,
             physics_pipeline,
             island_manager,
@@ -104,55 +97,13 @@ impl<'a> Simulation<'a> {
             ccd_solver,
             rigid_body_set,
             collider_set,
+        };
+
+        Self {
+            state,
+            bodies,
+            physics_context,
         }
-    }
-
-    pub fn step(&mut self, dt: f32) {
-        self.integration_parameters.dt = dt;
-
-        // Calculate velocity vectors
-        let num_bodies = self.bodies.len();
-        for i in 0..num_bodies {
-            // Get displacement
-            let body = &self.bodies[i];
-            let mut force = Vec2::ZERO;
-            for other in &self.bodies {
-                if body != other {
-                    let sqr_dist = (other.position(self) - body.position(self))
-                        .length_squared();
-                    let force_dir = (other.position(self)
-                        - body.position(self))
-                    .normalize();
-                    force += force_dir
-                        * UNIVERSAL_GRAVITY
-                        * body.mass(self)
-                        * other.mass(self)
-                        / sqr_dist;
-                }
-            }
-
-            // Apply gravity
-            let rigid_body =
-                self.rigid_body_set.get_mut(body.rigid_body_handle).unwrap();
-            rigid_body.reset_forces(true);
-            rigid_body.add_force(vector![force.x, force.y], true);
-        }
-
-        // Calculate velocity vectors
-        self.physics_pipeline.step(
-            &vector![0.0, 0.0],
-            &self.integration_parameters,
-            &mut self.island_manager,
-            &mut self.broad_phase,
-            &mut self.narrow_phase,
-            &mut self.rigid_body_set,
-            &mut self.collider_set,
-            &mut ImpulseJointSet::new(),
-            &mut MultibodyJointSet::new(),
-            &mut self.ccd_solver,
-            &(),
-            &(),
-        );
     }
 
     pub fn update(&mut self) {
@@ -171,8 +122,9 @@ impl<'a> Simulation<'a> {
         self.state.last_frame.replace(now);
 
         if !self.state.paused {
-            self.step(dt);
+            self.physics_context.update(&self.bodies, dt);
         }
+
         self.update_camera(dt);
 
         // Reset input controller

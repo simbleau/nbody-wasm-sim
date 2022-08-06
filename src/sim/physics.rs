@@ -1,52 +1,65 @@
 use glam::Vec2;
+use rapier2d::prelude::*;
 
-use super::Body;
+use super::{Body, UNIVERSAL_GRAVITY};
 
-pub struct Collision {
-    pub v1_final: Vec2,
-    pub v2_final: Vec2,
+pub struct PhysicsContext {
+    pub integration_parameters: IntegrationParameters,
+    pub physics_pipeline: PhysicsPipeline,
+    pub island_manager: IslandManager,
+    pub broad_phase: BroadPhase,
+    pub narrow_phase: NarrowPhase,
+    pub ccd_solver: CCDSolver,
+    pub rigid_body_set: RigidBodySet,
+    pub collider_set: ColliderSet,
 }
 
-pub fn collides(body: &Body, other: &Body) -> bool {
-    (other.position - body.position).length() <= (body.radius + other.radius)
-}
+impl PhysicsContext {
+    pub fn update(&mut self, bodies: &Vec<Body>, dt: f32) {
+        self.integration_parameters.dt = dt;
 
-pub fn get_collision(b1: &Body, b2: &Body) -> Option<Collision> {
-    if collides(b1, b2) {
-        // The unit vector normal to the collision surface plane
-        let collision_surface_norm = (b2.position - b1.position).normalize();
+        // Calculate velocity vectors
+        let num_bodies = bodies.len();
+        for i in 0..num_bodies {
+            // Get displacement
+            let body = &bodies[i];
+            let mut force = Vec2::ZERO;
+            for other in bodies {
+                if body != other {
+                    let sqr_dist = (other.position(&self)
+                        - body.position(&self))
+                    .length_squared();
+                    let force_dir = (other.position(&self)
+                        - body.position(&self))
+                    .normalize();
+                    force += force_dir
+                        * UNIVERSAL_GRAVITY
+                        * body.mass(&self)
+                        * other.mass(&self)
+                        / sqr_dist;
+                }
+            }
 
-        // Rotate initial velocities to be parallel with the X-axis
-        let v1_init = b1.velocity.rotate(collision_surface_norm);
-        let v2_init = b2.velocity.rotate(-collision_surface_norm);
+            // Apply gravity
+            let rigid_body =
+                self.rigid_body_set.get_mut(body.rigid_body_handle).unwrap();
+            rigid_body.reset_forces(true);
+            rigid_body.add_force(vector![force.x, force.y], true);
+        }
 
-        let v1x = v1_init.x;
-        let v2x = v2_init.x;
-
-        // Final velocity of body 1.  Derived from the 1D equation for
-        // conservation of momentum (P); P_in = P_out where P = m*v
-        let v1x_final = ((b1.mass() - b2.mass()) * v1x
-            + 2.0 * b2.mass() * b2.mass())
-            / (b1.mass() + b2.mass());
-
-        let mut v1_final = Vec2::new(v1x_final, v1_init.y);
-
-        // Rotate body 1's final velocity back to their original plane
-        v1_final = v1_final.rotate(-collision_surface_norm) * 0.3;
-
-        // Final velocity of body 2.  Same calculation as for body 1
-        // except b1 is changed to b2 and vice-versa.
-        let v2x_final = ((b2.mass() - b1.mass()) * v2x
-            + 2.0 * b1.mass() * b1.mass())
-            / (b2.mass() + b1.mass());
-
-        let mut v2_final = Vec2::new(v2x_final, v2_init.y);
-
-        // Rotate body 2's final velocity back to their original plane
-        v2_final = v2_final.rotate(collision_surface_norm) * 0.3;
-
-        Some(Collision { v1_final, v2_final })
-    } else {
-        None
+        self.physics_pipeline.step(
+            &vector![0.0, 0.0],
+            &self.integration_parameters,
+            &mut self.island_manager,
+            &mut self.broad_phase,
+            &mut self.narrow_phase,
+            &mut self.rigid_body_set,
+            &mut self.collider_set,
+            &mut ImpulseJointSet::new(),
+            &mut MultibodyJointSet::new(),
+            &mut self.ccd_solver,
+            &(),
+            &(),
+        );
     }
 }
