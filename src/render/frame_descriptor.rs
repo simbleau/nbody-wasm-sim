@@ -9,7 +9,7 @@ use crate::{
         CameraUniform, GpuPrimitive, GpuQuad, GpuTransform, GpuUniform,
         WorldUniform,
     },
-    sim::State,
+    sim::Simulation,
 };
 
 pub struct FrameDescriptor {
@@ -20,35 +20,35 @@ pub struct FrameDescriptor {
 }
 
 impl FrameDescriptor {
-    pub fn build(state: &State) -> FrameDescriptor {
+    pub fn build(sim: &Simulation) -> FrameDescriptor {
         let mut transforms = Vec::new();
-        for body in &state.bodies {
+        for body in &sim.bodies {
             transforms.push(GpuTransform {
                 model: Mat4::from_scale_rotation_translation(
-                    Vec2::splat(2.0 * body.radius).extend(1.0),
-                    Quat::from_rotation_z(body.rotation),
-                    body.position.extend(1.0),
+                    Vec2::splat(2.0 * body.radius(sim)).extend(1.0),
+                    Quat::from_rotation_z(body.rotation(sim)),
+                    body.position(sim).extend(1.0),
                 )
                 .to_cols_array_2d(),
             })
         }
 
         let camera = Camera::new(
-            state.view_size.as_vec2(),
-            state.rotation,
-            state.pan,
-            state.zoom,
+            sim.state.view_size.as_vec2(),
+            sim.state.rotation,
+            sim.state.pan,
+            sim.state.zoom,
         );
 
         let clear_color = Color {
-            r: state.bg_color.x,
-            g: state.bg_color.y,
-            b: state.bg_color.z,
+            r: sim.state.bg_color.x,
+            g: sim.state.bg_color.y,
+            b: sim.state.bg_color.z,
             a: 1.0,
         };
 
         FrameDescriptor {
-            wireframe: state.wireframe,
+            wireframe: sim.state.wireframe,
             transforms,
             camera,
             clear_color,

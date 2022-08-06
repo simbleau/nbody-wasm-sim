@@ -2,10 +2,10 @@ use std::collections::HashMap;
 
 use gloo_console::log;
 use wgpu::{BindGroup, BindGroupLayout, ShaderModule, Texture};
-use winit::window::Window;
+use winit::dpi::PhysicalSize;
 
 use crate::render::{frame_descriptor::FrameDescriptor, pipelines::Pipeline};
-use crate::sim::{State, WORLD_EDGE_SEGMENTS};
+use crate::sim::{Simulation, WORLD_EDGE_SEGMENTS};
 
 pub struct WgpuContext {
     pub surface: wgpu::Surface,
@@ -19,14 +19,14 @@ pub struct WgpuContext {
 
 impl WgpuContext {
     // Creating some of the wgpu types requires async code
-    pub async fn new(window: &Window) -> Self {
-        let size = window.inner_size();
-        log!("Surface size:", size.width, size.height);
+    pub async fn new(canvas: &web_sys::HtmlCanvasElement) -> Self {
+        let (width, height) = (canvas.width(), canvas.height());
+        log!("Surface size:", width, height);
 
         // The instance is a handle to our GPU
         // Backends::all => Vulkan + Metal + DX12 + Browser WebGPU
         let instance = wgpu::Instance::new(wgpu::Backends::all());
-        let surface = unsafe { instance.create_surface(window) };
+        let surface = instance.create_surface_from_canvas(canvas);
 
         let adapter = instance
             .request_adapter(&wgpu::RequestAdapterOptions {
@@ -57,8 +57,8 @@ impl WgpuContext {
         let config = wgpu::SurfaceConfiguration {
             usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
             format: surface.get_supported_formats(&adapter)[0],
-            width: size.width,
-            height: size.height,
+            width,
+            height,
             present_mode: wgpu::PresentMode::AutoNoVsync,
         };
         surface.configure(&device, &config);
@@ -68,7 +68,7 @@ impl WgpuContext {
             device,
             queue,
             config,
-            size,
+            size: PhysicalSize::new(width, height),
             shaders: HashMap::new(),
             textures: HashMap::new(),
         }
@@ -83,7 +83,10 @@ impl WgpuContext {
         }
     }
 
-    pub fn render(&mut self, state: &State) -> Result<(), wgpu::SurfaceError> {
+    pub fn render(
+        &mut self,
+        sim: &Simulation,
+    ) -> Result<(), wgpu::SurfaceError> {
         // Get the surface texture we will draw on
         let output = self.surface.get_current_texture()?;
         let view = output
@@ -98,7 +101,7 @@ impl WgpuContext {
         );
 
         // Create all data from the state we need for a frame
-        let frame_desc = FrameDescriptor::build(&state);
+        let frame_desc = FrameDescriptor::build(sim);
         let vertex_buffer = frame_desc.create_vertex_buffer(&self.device);
         let index_buffer = frame_desc.create_index_buffer(&self.device);
         let (
@@ -108,10 +111,10 @@ impl WgpuContext {
             camera_bind_group_layout,
         ) = frame_desc.create_camera_binding(&self.device);
         let (_, tex_bind_group, tex_bind_group_layout) =
-            self.get_texture(state.texture_key);
+            self.get_texture(sim.state.texture_key);
         let instance_buffer = frame_desc.create_instance_buffer(&self.device);
         // Get rendering pipeline
-        let pipeline = match &state.wireframe {
+        let pipeline = match &sim.state.wireframe {
             true => {
                 let pipeline_layout = self.device.create_pipeline_layout(
                     &wgpu::PipelineLayoutDescriptor {
@@ -182,7 +185,7 @@ impl WgpuContext {
             // Draw world data
             pass.set_pipeline(&pipeline);
             pass.set_bind_group(0, &camera_bind_group, &[]);
-            if !state.wireframe {
+            if !sim.state.wireframe {
                 pass.set_bind_group(1, tex_bind_group, &[]);
             }
             pass.set_vertex_buffer(0, vertex_buffer.slice(..));

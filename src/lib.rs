@@ -20,7 +20,13 @@ pub async fn run() {
 
     let dom = Dom::new();
     let canvas = dom::get_canvas();
+    canvas.set_width(600);
+    canvas.set_height(400);
     log!("Acquired DOM elements");
+
+    // Connect graphics card to window
+    let mut context = WgpuContext::new(&canvas).await;
+    log!("Acquired graphics context");
 
     // Create window
     let event_loop = EventLoop::new();
@@ -34,10 +40,6 @@ pub async fn run() {
         })
         .expect("Could not build window");
     log!("Created window");
-
-    // Connect graphics card to window
-    let mut context = WgpuContext::new(&window).await;
-    log!("Acquired graphics context");
 
     // Load shaders
     context.add_shader("vert", include_str!("../assets/shaders/vert.wgsl"));

@@ -1,14 +1,13 @@
-use glam::{DVec2, DVec3, Mat3, Quat, UVec2, Vec2, Vec3, Vec3Swizzles};
+use glam::{DVec2, DVec3, UVec2, Vec2};
 use instant::Instant;
-use winit::event::{ElementState, VirtualKeyCode, WindowEvent};
+use winit::event::{ElementState, WindowEvent};
 
-use crate::sim::{input::InputController, simulation, Body, WORLD_RADIUS};
+use crate::sim::input::InputController;
 
 pub struct State<'a> {
     pub mouse_pos: DVec2,
     pub view_size: UVec2,
     pub last_frame: Option<Instant>,
-    pub bodies: Vec<Body>,
     pub wireframe: bool,
     pub paused: bool,
     pub bg_color: DVec3,
@@ -26,7 +25,6 @@ impl<'a> Default for State<'a> {
             mouse_pos: DVec2::default(),
             view_size: UVec2::default(),
             last_frame: None,
-            bodies: vec![],
             wireframe: false,
             paused: false,
             bg_color: DVec3::default(),
@@ -41,49 +39,6 @@ impl<'a> Default for State<'a> {
 }
 
 impl<'a> State<'a> {
-    pub fn new(view_size: Vec2) -> Self {
-        let zoom = if view_size.y < view_size.x {
-            view_size.y / (WORLD_RADIUS * 2.0)
-        } else {
-            view_size.x / (WORLD_RADIUS * 2.0)
-        };
-
-        // Generate a bunch of bodies
-        let radius_max = 1.0;
-        let velocity_max_phi = 2.0 * std::f64::consts::PI;
-        let velocity_max_magnitude = 10.0;
-        let rngify = |x| (js_sys::Math::random() * x) as f32;
-        let mut bodies = Vec::new();
-        for _ in 0..50 {
-            let body_radius = rngify(radius_max);
-            let mut body = Body::new(Vec2::ZERO, 0.0, body_radius);
-
-            let r = WORLD_RADIUS * rngify(1.0).sqrt() - body_radius;
-            let displacement = Vec3::new(r, 0.0, 0.0);
-            let displacement_direction =
-                Mat3::from_rotation_z(rngify(std::f64::consts::PI * 2.0));
-
-            body.position = (displacement_direction * displacement).xy();
-
-            let velocity_direction =
-                Quat::from_rotation_z(rngify(velocity_max_phi));
-            let velocity_magnitude = rngify(velocity_max_magnitude);
-
-            let velocity =
-                (velocity_direction * Vec3::Y).xy() * velocity_magnitude;
-            body.velocity = velocity;
-
-            bodies.push(body);
-        }
-
-        Self {
-            pan: Vec2::new(0., 0.),
-            zoom,
-            bodies,
-            ..Default::default()
-        }
-    }
-
     pub fn handle_input(&mut self, event: &WindowEvent) {
         // We have no events to handle currently
         match event {
@@ -107,28 +62,5 @@ impl<'a> State<'a> {
             }
             _ => {}
         }
-    }
-
-    pub fn update(&mut self) {
-        // Pausing
-        if self.input_controller.is_key_pressed(VirtualKeyCode::Space) {
-            self.paused = !self.paused;
-        }
-
-        // Get delta time
-        let now = Instant::now();
-        let dt = (now - self.last_frame.unwrap_or(now)).as_secs_f32();
-        self.last_frame.replace(now);
-
-        if self.paused {
-            // Only update camera
-            simulation::update_camera(self, dt);
-        } else {
-            // Update simulation
-            simulation::update(self, dt);
-        }
-
-        // Reset input controller
-        self.input_controller.update();
     }
 }

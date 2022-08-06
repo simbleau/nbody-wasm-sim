@@ -1,47 +1,46 @@
 use glam::Vec2;
+use nalgebra::{Complex, Unit};
+use rapier2d::prelude::*;
 
-#[derive(Clone, Debug, PartialEq)]
+use crate::sim::simulation::Simulation;
+
+#[derive(PartialEq)]
 pub struct Body {
-    pub position: Vec2,
-    pub radius: f32,
-    pub rotation: f32,
-    pub elapsed: f32,
-    pub density: f32,
-    pub velocity: Vec2,
-}
-
-impl Default for Body {
-    fn default() -> Self {
-        Body {
-            position: Vec2::new(0.0, 0.0),
-            radius: 0.5,
-            elapsed: 0.0,
-            rotation: 0.0,
-            velocity: Vec2::ZERO,
-            density: 1.0,
-        }
-    }
+    pub rigid_body_handle: RigidBodyHandle,
+    pub collider_handle: ColliderHandle,
 }
 
 impl Body {
-    pub fn area(&self) -> f32 {
-        std::f32::consts::PI * self.radius * self.radius
+    pub fn mass(&self, sim: &Simulation) -> f32 {
+        sim.rigid_body_set
+            .get(self.rigid_body_handle)
+            .unwrap()
+            .mass()
     }
 
-    pub fn mass(&self) -> f32 {
-        self.area() * self.density
+    pub fn radius(&self, sim: &Simulation) -> f32 {
+        sim.collider_set
+            .get(self.collider_handle)
+            .map(Collider::shape)
+            .map(<dyn shape::Shape>::as_ball)
+            .flatten()
+            .map(|ball| ball.radius)
+            .unwrap()
     }
 
-    pub fn update(&mut self, dt: f32) {
-        self.elapsed += dt;
+    pub fn rotation(&self, sim: &Simulation) -> f32 {
+        sim.rigid_body_set
+            .get(self.rigid_body_handle)
+            .map(RigidBody::rotation)
+            .map(Unit::<Complex<f32>>::angle)
+            .unwrap()
     }
 
-    pub fn new(origin: Vec2, rotation: f32, radius: f32) -> Self {
-        Self {
-            position: origin,
-            radius,
-            rotation,
-            ..Default::default()
-        }
+    pub fn position(&self, sim: &Simulation) -> Vec2 {
+        sim.rigid_body_set
+            .get(self.rigid_body_handle)
+            .map(RigidBody::position)
+            .map(|p| Vec2::new(p.translation.x, p.translation.y))
+            .unwrap()
     }
 }

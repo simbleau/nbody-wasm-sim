@@ -6,26 +6,34 @@ use winit::window::Window;
 
 use crate::dom::Dom;
 use crate::render::WgpuContext;
-use crate::sim::State;
+use crate::sim::{Simulation, State, WORLD_RADIUS};
 
 pub struct Runtime<'a> {
     context: WgpuContext,
     window: Window,
     dom: Dom,
-    state: State<'a>,
+    sim: Simulation<'a>,
 }
 
 impl Runtime<'_> {
     pub fn new(context: WgpuContext, window: Window, dom: Dom) -> Self {
+        let mut state = State::default();
+        // Zoom into sim
         let view_size = Vec2::new(
             window.inner_size().width as f32,
             window.inner_size().height as f32,
         );
+        state.zoom = if view_size.y < view_size.x {
+            view_size.y / (WORLD_RADIUS * 2.0)
+        } else {
+            view_size.x / (WORLD_RADIUS * 2.0)
+        };
+
         Self {
             context,
             window,
             dom,
-            state: State::new(view_size),
+            sim: Simulation::new(100, state),
         }
     }
 
@@ -39,7 +47,7 @@ impl Runtime<'_> {
         self.dom.log_list.log_event(&event);
 
         // Update world
-        self.state.update();
+        self.sim.update();
 
         // Handle events
         match event {
@@ -47,7 +55,7 @@ impl Runtime<'_> {
                 window_id: id,
                 event: ref winevent,
             } if id == self.window.id() => {
-                self.state.handle_input(winevent);
+                self.sim.state.handle_input(winevent);
                 match winevent {
                     WindowEvent::Resized(physical_size) => {
                         self.context.resize(*physical_size);
@@ -68,7 +76,7 @@ impl Runtime<'_> {
             Event::RedrawRequested(window_id)
                 if window_id == self.window.id() =>
             {
-                match self.context.render(&self.state) {
+                match self.context.render(&self.sim) {
                     Ok(_) => {
                         // Update frame count
                         self.dom.fps_counter.update();
