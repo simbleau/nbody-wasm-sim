@@ -23,13 +23,15 @@ crate-type = ["cdylib"]
 console_error_panic_hook = "0.1.7"
 wasm-bindgen = "0.2.81"
 wasm-bindgen-futures = "0.4.31"
-winit = "0.26.1"
+raw-window-handle = "0.5.0"
+winit = "0.27.1"
 gloo-console = "0.2.1"
 instant = "0.1.12"
 wgpu = { version = "0.13.1", features = ["webgl"] } # TODO: Years in the future when wgpu is stable, remove gl
 glam = "0.21.2"
 bytemuck = { version = "1.10.0", features = [ "derive" ] }
 js-sys = "0.3.58"
+rapier2d = "0.14.0"
 
 [dependencies.web-sys]
 version = "0.3.58"

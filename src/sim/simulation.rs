@@ -10,9 +10,12 @@ pub const CAM_ROTATE_SPEED: f32 = 5.0;
 pub const CAM_PAN_SPEED: f32 = 400.0;
 pub const DAMPENING: f32 = 0.05;
 
-pub const PIXEL_DISTANCE_IN_METERS: f32 = 10_000_000_000.0;
-pub const UNIVERSAL_GRAV_CONST: f32 =
-    0.000000000066743 * PIXEL_DISTANCE_IN_METERS;
+pub const TIME_STEP: f32 = 500_000.0; // Seconds
+pub const PIXEL_DISTANCE: f32 = 500_000_000_000.0; // Meters
+pub const SPEED_OF_LIGHT: f32 = 299_792_458.0 / PIXEL_DISTANCE;
+pub const UNIVERSAL_GRAVITY: f32 = 0.000000000066743 * PIXEL_DISTANCE;
+pub const TERMINAL_VELOCITY: Vec2 =
+    Vec2::new(SPEED_OF_LIGHT * TIME_STEP, SPEED_OF_LIGHT * TIME_STEP);
 
 pub fn update(state: &mut State, dt: f32) {
     // Calculate velocity vectors
@@ -27,13 +30,14 @@ pub fn update(state: &mut State, dt: f32) {
                     (other.position - body.position).length_squared();
                 let force_dir = (other.position - body.position).normalize();
                 let force =
-                    force_dir * UNIVERSAL_GRAV_CONST * body.mass() / sqr_dist;
+                    force_dir * UNIVERSAL_GRAVITY * body.mass() / sqr_dist;
                 let acceleration = force / body.mass();
                 velocity += acceleration * dt;
             }
         }
         // Adjust body
-        *&mut state.bodies[i].velocity = velocity;
+        *&mut state.bodies[i].velocity =
+            velocity.clamp(-TERMINAL_VELOCITY, TERMINAL_VELOCITY);
     }
 
     'A: for i in 0..num_bodies {

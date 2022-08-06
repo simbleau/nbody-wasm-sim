@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use gloo_console::log;
 use wgpu::{BindGroup, BindGroupLayout, ShaderModule, Texture};
-use winit::window::Window;
+use winit::dpi::PhysicalSize;
 
 use crate::render::{frame_descriptor::FrameDescriptor, pipelines::Pipeline};
 use crate::sim::{State, WORLD_EDGE_SEGMENTS};
@@ -19,14 +19,14 @@ pub struct WgpuContext {
 
 impl WgpuContext {
     // Creating some of the wgpu types requires async code
-    pub async fn new(window: &Window) -> Self {
-        let size = window.inner_size();
-        log!("Surface size:", size.width, size.height);
+    pub async fn new(canvas: &web_sys::HtmlCanvasElement) -> Self {
+        let (width, height) = (canvas.width(), canvas.height());
+        log!("Surface size:", width, height);
 
         // The instance is a handle to our GPU
         // Backends::all => Vulkan + Metal + DX12 + Browser WebGPU
         let instance = wgpu::Instance::new(wgpu::Backends::all());
-        let surface = unsafe { instance.create_surface(window) };
+        let surface = instance.create_surface_from_canvas(canvas);
 
         let adapter = instance
             .request_adapter(&wgpu::RequestAdapterOptions {
@@ -57,8 +57,8 @@ impl WgpuContext {
         let config = wgpu::SurfaceConfiguration {
             usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
             format: surface.get_supported_formats(&adapter)[0],
-            width: size.width,
-            height: size.height,
+            width,
+            height,
             present_mode: wgpu::PresentMode::AutoNoVsync,
         };
         surface.configure(&device, &config);
@@ -68,7 +68,7 @@ impl WgpuContext {
             device,
             queue,
             config,
-            size,
+            size: PhysicalSize::new(width, height),
             shaders: HashMap::new(),
             textures: HashMap::new(),
         }
