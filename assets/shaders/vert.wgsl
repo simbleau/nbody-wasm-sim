@@ -12,6 +12,7 @@ struct Input {
 struct Output {
     @builtin(position) clip_position: vec4<f32>,
     @location(0) uv: vec2<f32>,
+    @location(1) color: vec3<f32>,
 };
 
 struct InstanceInput {
@@ -19,6 +20,7 @@ struct InstanceInput {
     @location(3) model_matrix_1: vec4<f32>,
     @location(4) model_matrix_2: vec4<f32>,
     @location(5) model_matrix_3: vec4<f32>,
+    @location(6) radius: f32,
 };
 
 // Vertex shader
@@ -42,5 +44,8 @@ fn vs_main(
 
     // World coords -> Device Coordinates
     out.clip_position = camera.view_proj * world_vert;
+
+    // Calculate color
+    out.color = instance.radius * vec3<f32>(0.0, 0.0, 1.0);
     return out;
 }

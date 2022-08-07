@@ -31,6 +31,7 @@ impl FrameDescriptor {
                     body.position(ctx).extend(1.0),
                 )
                 .to_cols_array_2d(),
+                radius: body.radius(ctx),
             })
         }
 
@@ -87,7 +88,8 @@ impl FrameDescriptor {
         let instance_data = self
             .transforms
             .iter()
-            .map(|gpu_transform| gpu_transform.model)
+            .map(GpuTransform::data)
+            .flatten()
             .collect::<Vec<_>>();
 
         device.create_buffer_init(&wgpu::util::BufferInitDescriptor {

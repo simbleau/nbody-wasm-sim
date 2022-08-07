@@ -1,5 +1,5 @@
-use wgpu::VertexBufferLayout;
 use std::mem;
+use wgpu::VertexBufferLayout;
 
 use crate::render::gpu_types::GpuPrimitive;
 
@@ -7,6 +7,7 @@ use crate::render::gpu_types::GpuPrimitive;
 #[derive(Copy, Clone)]
 pub struct GpuTransform {
     pub model: [[f32; 4]; 4],
+    pub radius: f32,
 }
 
 unsafe impl bytemuck::Pod for GpuTransform {}
@@ -37,6 +38,11 @@ impl GpuTransform {
                     offset: mem::size_of::<[f32; 12]>() as wgpu::BufferAddress,
                     shader_location: 5,
                     format: wgpu::VertexFormat::Float32x4,
+                },
+                wgpu::VertexAttribute {
+                    offset: mem::size_of::<[f32; 16]>() as wgpu::BufferAddress,
+                    shader_location: 6,
+                    format: wgpu::VertexFormat::Float32,
                 },
             ],
         };
