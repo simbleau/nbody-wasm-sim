@@ -6,10 +6,10 @@
 +
 <a href="https://www.rust-lang.org/what/wasm"><img src="https://simpleicons.org/icons/webassembly.svg" width="50px" height="50px"/></a>
 +
-<a href=""><img src="https://wgpu.rs/logo.min.svg" width="50px" height="50px"/></a>
+<a href="https://wgpu.rs/"><img src="https://wgpu.rs/logo.min.svg" width="50px" height="50px"/></a>
 </h1>
 
-<h2>Click [here](https://simbleau.github.io/nbody-wasm-sim) to demo the simulation.</h2>
+<h2>Click <a href="https://simbleau.github.io/nbody-wasm-sim">here</a> to demo the simulation.</h2>
 
 </div>
 
