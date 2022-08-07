@@ -1,0 +1,56 @@
+name: build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  TOOLCHAIN: nightly
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      # Cargo cache
+      - name: Cargo cache
+        id: cache-cargo
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/bin
+          key: cargo
+      # Install cargo deps
+      - name: Pull Cargo dependencies
+        if: steps.cache-cargo.outputs.cache-hit != 'true'
+        run: |
+          cargo install trunk
+
+      # Build cache
+      - name: Build cache
+        id: cache-build
+        uses: actions/cache@v3
+        with:
+          path: |
+            ./dist
+          key: dist-${{ hashFiles('./src') }}-${{ hashFiles('./assets') }}
+        # Build
+      - name: Build dist/
+        if: steps.cache-build.outputs.cache-hit != 'true'
+        run: |
+          cargo build --target wasm32-unknown-unknown --verbose
+          trunk build
+
+        # Docker Build
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Build Docker image
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: false
