@@ -43,4 +43,5 @@ jobs:
       # Install cargo deps
       - name: Trunk build
         if: steps.cache-build.outputs.cache-hit != 'true'
-        run: trunk build
+        run: |
+          trunk build

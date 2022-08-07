@@ -35,7 +35,6 @@ nalgebra = "0.31.1"
 
 [dependencies.rapier2d]
 version = "0.14.0"
-opt-level = 3
 features = [ "wasm-bindgen" ]
 
 [dependencies.web-sys]
