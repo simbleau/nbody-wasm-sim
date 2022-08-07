@@ -42,7 +42,7 @@ jobs:
       - name: Trunk build
         if: steps.cache-build.outputs.cache-hit != 'true'
         run: |
-          trunk build --release
+          trunk build --release --public-url https://simbleau.github.io/nbody-wasm-sim/
 
       # Deploy, GitHub Pages
       - name: Deploy
