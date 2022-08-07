@@ -16,6 +16,22 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      # Cargo cache
+      - name: Cargo cache
+        id: cache-cargo
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/bin
+          key: cargo
+
+      # Install cargo deps
+      - name: Pull Cargo dependencies
+        if: steps.cache-cargo.outputs.cache-hit != 'true'
+        run: |
+          rustup update $TOOLCHAIN
+          rustup default $TOOLCHAIN
+          cargo install trunk
+
       # Pull website
       - name: Build cache
         id: cache-build
@@ -27,16 +43,4 @@ jobs:
       # Install cargo deps
       - name: Trunk build
         if: steps.cache-build.outputs.cache-hit != 'true'
-        run: |
-          rustup update $TOOLCHAIN
-          rustup default $TOOLCHAIN
-          cargo install trunk
-          cargo build --verbose
-          trunk build
-
-      # Deploy, GitHub Pages
-      - name: Deploy
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist
+        run: trunk build

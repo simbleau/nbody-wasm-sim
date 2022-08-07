@@ -29,7 +29,6 @@ jobs:
           rustup update $TOOLCHAIN
           rustup default $TOOLCHAIN
           cargo install trunk
-          cargo build --release --verbose
           trunk build --release
 
       # Deploy, GitHub Pages
