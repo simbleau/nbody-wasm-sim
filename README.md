@@ -22,7 +22,7 @@ This repository is a 2D N-body simulation of a dynamical system of bodies, under
 
 ---
 
-# Serve Locally
+# 🚀 Serve Locally
 - Install [Trunk](https://trunkrs.dev/)
 - Run: `trunk serve`
 - Preview: [`http://localhost:8080/`](http://localhost:8080/)
