@@ -1,7 +1,7 @@
 use glam::Vec2;
 use rapier2d::prelude::*;
 
-use super::{Body, UNIVERSAL_GRAVITY};
+use super::{Body, GRAVITY_AMPLIFIER, UNIVERSAL_GRAVITY};
 
 pub struct PhysicsContext {
     pub bodies: Vec<Body>,
@@ -64,6 +64,7 @@ impl PhysicsContext {
                     .normalize();
                     force += force_dir
                         * UNIVERSAL_GRAVITY
+                        * GRAVITY_AMPLIFIER
                         * body.mass(self)
                         * other.mass(self)
                         / sqr_dist;

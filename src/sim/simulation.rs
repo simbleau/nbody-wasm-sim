@@ -14,10 +14,10 @@ pub const CAM_ROTATE_SPEED: f32 = 5.0;
 pub const CAM_PAN_SPEED: f32 = 400.0;
 pub const DAMPENING: f32 = 0.05;
 
-pub const RESTITUTION: f32 = 0.8;
-pub const FRICTION: f32 = 0.8;
-pub const PIXEL_DISTANCE: f32 = 100_000_000_000.0; // Meters
-pub const UNIVERSAL_GRAVITY: f32 = 0.000000000066743 * PIXEL_DISTANCE;
+pub const RESTITUTION: f32 = 0.95;
+pub const FRICTION: f32 = 0.1;
+pub const GRAVITY_AMPLIFIER: f32 = 10_000_000_000.0;
+pub const UNIVERSAL_GRAVITY: f32 = 0.000000000066743;
 
 pub struct Simulation {
     pub state: State,
