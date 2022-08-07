@@ -4,15 +4,95 @@
 <head>
     <meta charset="utf-8">
     <title>N-Body WASM Simulation</title>
+    <style>
+        html,
+        body {
+            font-size: .8rem;
+        }
+
+        html {
+            min-height: 100%;
+            position: relative;
+        }
+
+        body {
+            height: 100%;
+            color: white;
+            background-color: blue;
+            padding: 0;
+            margin: 0;
+        }
+
+        #i {
+            position: absolute;
+            top: 0;
+            right: 0;
+            margin: 10px;
+            text-align: right;
+        }
+
+        #f {
+            position: absolute;
+            top: 0;
+            left: 0;
+            margin: 10px;
+        }
+
+        #container {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            overflow: hidden;
+        }
+
+        #c {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        #e {
+            position: absolute;
+            margin-left: 10px;
+            bottom: 0;
+            left: 0;
+        }
+
+        #l {
+            overflow: hidden;
+            line-height: 1rem;
+            height: 5rem;
+        }
+    </style>
 </head>
 
 <body>
-    <h2 id="f">FPS: 0</h2>
-    <canvas id="c" style="background-color: blue;" width="600" height="400"></canvas>
-    <h2>Event Log</h2>
-    <ul id="l">
-        ...
-    </ul>
+    <div id="container">
+        <h2 id="f">FPS: --</h2>
+        <div id="i">
+            <b>Instructions</b>
+            </br>
+            <small>
+                WASD: Move Camera
+                </br>
+                ↕: Scale Camera
+                </br>
+                ↔: Rotate Camera
+                </br>
+                Q: Wireframe
+                </br>
+                E: Rave
+            </small>
+        </div>
+        <canvas id="c"></canvas>
+        <div id="e">
+            <h2>Event Log</h2>
+            <ul id="l">
+                ...
+            </ul>
+        </div>
+    </div>
 </body>
 
 </html>

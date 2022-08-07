@@ -14,6 +14,7 @@ use crate::{
 
 pub struct FrameDescriptor {
     wireframe: bool,
+    rave: bool,
     transforms: Vec<GpuTransform>,
     camera: Camera,
     pub clear_color: Color,
@@ -22,14 +23,16 @@ pub struct FrameDescriptor {
 impl FrameDescriptor {
     pub fn build(sim: &Simulation) -> FrameDescriptor {
         let mut transforms = Vec::new();
-        for body in &sim.bodies {
+        let ctx = &sim.physics_context;
+        for body in &ctx.bodies {
             transforms.push(GpuTransform {
                 model: Mat4::from_scale_rotation_translation(
-                    Vec2::splat(2.0 * body.radius(sim)).extend(1.0),
-                    Quat::from_rotation_z(body.rotation(sim)),
-                    body.position(sim).extend(1.0),
+                    Vec2::splat(2.0 * body.radius(ctx)).extend(1.0),
+                    Quat::from_rotation_z(body.rotation(ctx)),
+                    body.position(ctx).extend(1.0),
                 )
                 .to_cols_array_2d(),
+                radius: body.radius(ctx),
             })
         }
 
@@ -49,6 +52,7 @@ impl FrameDescriptor {
 
         FrameDescriptor {
             wireframe: sim.state.wireframe,
+            rave: sim.state.rave,
             transforms,
             camera,
             clear_color,
@@ -86,7 +90,8 @@ impl FrameDescriptor {
         let instance_data = self
             .transforms
             .iter()
-            .map(|gpu_transform| gpu_transform.model)
+            .map(GpuTransform::data)
+            .flatten()
             .collect::<Vec<_>>();
 
         device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
@@ -107,6 +112,6 @@ impl FrameDescriptor {
         &self,
         device: &Device,
     ) -> (Buffer, Vec<u8>, BindGroup, BindGroupLayout) {
-        WorldUniform::default().bind(device)
+        WorldUniform::from(self.rave).bind(device)
     }
 }

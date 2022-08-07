@@ -1,0 +1,47 @@
+name: build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  TOOLCHAIN: nightly
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Cargo cache
+      - name: Cargo cache
+        id: cache-cargo
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/bin
+          key: cargo
+
+      # Install cargo deps
+      - name: Pull Cargo dependencies
+        if: steps.cache-cargo.outputs.cache-hit != 'true'
+        run: |
+          rustup update $TOOLCHAIN
+          rustup default $TOOLCHAIN
+          cargo install trunk
+
+      # Pull website
+      - name: Build cache
+        id: cache-build
+        uses: actions/cache@v3
+        with:
+          path: ./dist
+          key: dist-${{ hashFiles('./src') }}-${{ hashFiles('./assets') }}
+
+      # Install cargo deps
+      - name: Trunk build
+        if: steps.cache-build.outputs.cache-hit != 'true'
+        run: |
+          trunk build

@@ -110,8 +110,30 @@ impl WgpuContext {
             camera_bind_group,
             camera_bind_group_layout,
         ) = frame_desc.create_camera_binding(&self.device);
+
+        // Data for world boundaries
+        let (
+            world_buffer,
+            world_buffer_contents,
+            world_bind_group,
+            world_bind_group_layout,
+        ) = frame_desc.create_world_data_binding(&self.device);
+        let world_pipeline = {
+            let pipeline_layout = self.device.create_pipeline_layout(
+                &wgpu::PipelineLayoutDescriptor {
+                    label: Some("World Pipeline Layout"),
+                    bind_group_layouts: &[
+                        &camera_bind_group_layout,
+                        &world_bind_group_layout,
+                    ],
+                    push_constant_ranges: &[],
+                },
+            );
+            Pipeline::World.get(self, pipeline_layout)
+        };
+
         let (_, tex_bind_group, tex_bind_group_layout) =
-            self.get_texture(sim.state.texture_key);
+            self.get_texture(&sim.state.texture_key);
         let instance_buffer = frame_desc.create_instance_buffer(&self.device);
         // Get rendering pipeline
         let pipeline = match &sim.state.wireframe {
@@ -132,33 +154,13 @@ impl WgpuContext {
                         bind_group_layouts: &[
                             &camera_bind_group_layout,
                             tex_bind_group_layout,
+                            &world_bind_group_layout,
                         ],
                         push_constant_ranges: &[],
                     },
                 );
                 Pipeline::Solid.get(self, pipeline_layout)
             }
-        };
-
-        // Data for world boundaries
-        let (
-            wradius_buffer,
-            world_buffer_contents,
-            wradius_bind_group,
-            wradius_bind_group_layout,
-        ) = frame_desc.create_world_data_binding(&self.device);
-        let world_pipeline = {
-            let pipeline_layout = self.device.create_pipeline_layout(
-                &wgpu::PipelineLayoutDescriptor {
-                    label: Some("World Pipeline Layout"),
-                    bind_group_layouts: &[
-                        &camera_bind_group_layout,
-                        &wradius_bind_group_layout,
-                    ],
-                    push_constant_ranges: &[],
-                },
-            );
-            Pipeline::World.get(self, pipeline_layout)
         };
 
         // Execute render pass
@@ -188,6 +190,8 @@ impl WgpuContext {
             if !sim.state.wireframe {
                 pass.set_bind_group(1, tex_bind_group, &[]);
             }
+            pass.set_bind_group(2, &world_bind_group, &[]);
+
             pass.set_vertex_buffer(0, vertex_buffer.slice(..));
             pass.set_vertex_buffer(1, instance_buffer.slice(..));
             pass.set_index_buffer(
@@ -203,7 +207,7 @@ impl WgpuContext {
             // Draw world boundaries
             pass.set_pipeline(&world_pipeline);
             pass.set_bind_group(0, &camera_bind_group, &[]);
-            pass.set_bind_group(1, &wradius_bind_group, &[]);
+            pass.set_bind_group(1, &world_bind_group, &[]);
             pass.draw(0..(WORLD_EDGE_SEGMENTS + 1), 0..1);
         }
 
@@ -211,7 +215,7 @@ impl WgpuContext {
         self.queue
             .write_buffer(&camera_buffer, 0, &camera_buffer_contents);
         self.queue
-            .write_buffer(&wradius_buffer, 0, &world_buffer_contents);
+            .write_buffer(&world_buffer, 0, &world_buffer_contents);
 
         // Submit queue
         self.queue.submit(std::iter::once(encoder.finish()));

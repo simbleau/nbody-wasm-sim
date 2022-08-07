@@ -7,7 +7,8 @@ var<uniform> camera: CameraUniform;
 struct WorldUniform {
     radius: f32,
     boundary_segments: u32,
-    padding: vec2<f32>,
+    rave: u32,
+    padding: u32,
 };
 
 @group(1) @binding(0)
