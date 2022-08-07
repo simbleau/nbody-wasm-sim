@@ -14,6 +14,22 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      # Cargo cache
+      - name: Cargo cache
+        id: cache-cargo
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/bin
+          key: cargo
+
+      # Install cargo deps
+      - name: Pull Cargo dependencies
+        if: steps.cache-cargo.outputs.cache-hit != 'true'
+        run: |
+          rustup update $TOOLCHAIN
+          rustup default $TOOLCHAIN
+          cargo install trunk
+
       # Pull website
       - name: Build cache
         id: cache-build
@@ -26,9 +42,6 @@ jobs:
       - name: Trunk build
         if: steps.cache-build.outputs.cache-hit != 'true'
         run: |
-          rustup update $TOOLCHAIN
-          rustup default $TOOLCHAIN
-          cargo install trunk
           trunk build --release
 
       # Deploy, GitHub Pages
