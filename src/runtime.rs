@@ -17,7 +17,7 @@ pub struct Runtime {
 
 impl Runtime {
     pub fn new(context: WgpuContext, window: Window, dom: Dom) -> Self {
-        let mut sim = Simulation::new(100);
+        let mut sim = Simulation::default();
         // Zoom into sim
         let view_size = Vec2::new(
             window.inner_size().width as f32,
