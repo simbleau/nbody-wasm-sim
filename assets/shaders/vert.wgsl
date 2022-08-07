@@ -79,7 +79,6 @@ fn vs_main(
         twinkle = vec3<f32>(instance.model_matrix_0.x);
     }
 
-
     // Calculate color
     out.color = star_color * tint * twinkle;
     return out;
