@@ -9,7 +9,7 @@
 <a href=""><img src="https://wgpu.rs/logo.min.svg" width="50px" height="50px"/></a>
 </h1>
 
-<h2>Click here to demo the simulation.</h2>
+<h2>Click [here](https://simbleau.github.io/nbody-wasm-sim) to demo the simulation.</h2>
 
 </div>
 
