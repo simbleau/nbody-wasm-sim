@@ -72,12 +72,15 @@ fn vs_main(
         star_color += mix(brightest, blue, instance.radius * 4.0);
     }
 
-    var brightness: vec3<f32> = vec3<f32>(1.0);
+    var tint: vec3<f32> = vec3<f32>(1.0);
+    var twinkle: vec3<f32> = vec3<f32>(1.0);
     if (world.rave > 0u) {
-        brightness = vec3<f32>(abs(world_vert.xyz) % 2.0);
+        tint = vec3<f32>(abs(world_vert.xyz) % 2.0);
+        twinkle = vec3<f32>(instance.model_matrix_0.x);
     }
 
+
     // Calculate color
-    out.color = star_color * brightness;
+    out.color = star_color * tint * twinkle;
     return out;
 }
