@@ -1,3 +1,4 @@
+/// Accessor methods to the items on index.html
 use instant::Instant;
 use wasm_bindgen::JsCast;
 use web_sys::HtmlCanvasElement;
