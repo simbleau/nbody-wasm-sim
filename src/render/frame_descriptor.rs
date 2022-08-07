@@ -14,6 +14,7 @@ use crate::{
 
 pub struct FrameDescriptor {
     wireframe: bool,
+    rave: bool,
     transforms: Vec<GpuTransform>,
     camera: Camera,
     pub clear_color: Color,
@@ -51,6 +52,7 @@ impl FrameDescriptor {
 
         FrameDescriptor {
             wireframe: sim.state.wireframe,
+            rave: sim.state.rave,
             transforms,
             camera,
             clear_color,
@@ -110,6 +112,6 @@ impl FrameDescriptor {
         &self,
         device: &Device,
     ) -> (Buffer, Vec<u8>, BindGroup, BindGroupLayout) {
-        WorldUniform::default().bind(device)
+        WorldUniform::from(self.rave).bind(device)
     }
 }

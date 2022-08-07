@@ -10,15 +10,17 @@ use crate::{
 pub struct WorldUniform {
     pub radius: f32,
     pub boundary_segments: u32,
-    _padding: [f32; 2],
+    pub rave_mode: bool,
+    _padding: [f32; 1],
 }
 
-impl Default for WorldUniform {
-    fn default() -> Self {
+impl From<bool> for WorldUniform {
+    fn from(rave: bool) -> Self {
         Self {
             radius: WORLD_RADIUS,
             boundary_segments: WORLD_EDGE_SEGMENTS,
-            _padding: [f32::default(), f32::default()],
+            rave_mode: rave,
+            _padding: [f32::default()],
         }
     }
 }
@@ -31,19 +33,20 @@ impl GpuUniform for WorldUniform {
         &self,
         device: &Device,
     ) -> (Buffer, Vec<u8>, BindGroup, BindGroupLayout) {
-        let layout = create_wradius_bind_group_layout(device);
-        let buffer_contents = get_wradius_buffer_contents();
-        let buffer = create_wradius_buffer(device, &buffer_contents);
+        let layout = create_world_bind_group_layout(device);
+        let buffer_contents = get_world_buffer_contents(self.rave_mode);
+        let buffer = create_world_buffer(device, &buffer_contents);
         let bind_group = create_world_bind_group(&buffer, &layout, device);
         (buffer, buffer_contents, bind_group, layout)
     }
 }
 
-fn get_wradius_buffer_contents() -> Vec<u8> {
+fn get_world_buffer_contents(rave: bool) -> Vec<u8> {
     let uniform = WorldUniform {
         radius: WORLD_RADIUS,
         boundary_segments: WORLD_EDGE_SEGMENTS,
-        _padding: [0.0, 0.0],
+        rave_mode: rave,
+        _padding: [0.0],
     };
     bytemuck::cast_slice(&[uniform]).to_vec()
 }
@@ -63,7 +66,7 @@ fn create_world_bind_group(
     })
 }
 
-fn create_wradius_buffer(device: &Device, buffer_contents: &[u8]) -> Buffer {
+fn create_world_buffer(device: &Device, buffer_contents: &[u8]) -> Buffer {
     device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
         label: Some("World Radius Buffer"),
         contents: buffer_contents,
@@ -73,7 +76,7 @@ fn create_wradius_buffer(device: &Device, buffer_contents: &[u8]) -> Buffer {
     })
 }
 
-fn create_wradius_bind_group_layout(device: &Device) -> BindGroupLayout {
+fn create_world_bind_group_layout(device: &Device) -> BindGroupLayout {
     device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
         entries: &[wgpu::BindGroupLayoutEntry {
             binding: 0,

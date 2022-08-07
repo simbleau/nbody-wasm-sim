@@ -158,6 +158,7 @@ impl Simulation {
         }
         // Texture Change
         if state.input_controller.is_key_released(VirtualKeyCode::E) {
+            state.rave = !state.rave;
             state.texture_key = match &state.texture_key as &str {
                 "moon" => "cookie".to_owned(),
                 _ => "moon".to_owned(),
