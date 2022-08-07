@@ -23,10 +23,19 @@
             margin: 0;
         }
 
-        #f {
-            float: left;
-            margin-left: 10px;
+        #i {
             position: absolute;
+            top: 0;
+            right: 0;
+            margin: 10px;
+            text-align: right;
+        }
+
+        #f {
+            position: absolute;
+            top: 0;
+            left: 0;
+            margin: 10px;
         }
 
         #container {
@@ -61,6 +70,21 @@
 <body>
     <div id="container">
         <h2 id="f">FPS: --</h2>
+        <div id="i">
+            <b>Instructions</b>
+            </br>
+            <small>
+                WASD: Move Camera
+                </br>
+                ↕: Scale Camera
+                </br>
+                ↔: Rotate Camera
+                </br>
+                Q: Wireframe
+                </br>
+                E: Rave
+            </small>
+        </div>
         <canvas id="c"></canvas>
         <div id="e">
             <h2>Event Log</h2>
