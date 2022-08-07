@@ -5,38 +5,49 @@ use instant::Instant;
 use rapier2d::prelude::*;
 use winit::event::VirtualKeyCode;
 
-use crate::sim::{State, WORLD_RADIUS};
+use crate::sim::physics::PhysicsContext;
+use crate::sim::State;
 
-use super::physics::PhysicsContext;
+// Universe
+pub const UNIVERSAL_GRAVITY: f32 = 0.000000000066743;
+pub const GRAVITY_AMPLIFIER: f32 = 5_000_000_000.0;
+pub const WORLD_RADIUS: f32 = 50.0;
+pub const WORLD_EDGE_SEGMENTS: u32 = 500;
 
+// Camera
 pub const CAM_ZOOM_SPEED: f32 = 5.0;
 pub const CAM_ROTATE_SPEED: f32 = 5.0;
 pub const CAM_PAN_SPEED: f32 = 400.0;
 pub const DAMPENING: f32 = 0.05;
 
-pub const RESTITUTION: f32 = 0.95;
-pub const FRICTION: f32 = 0.1;
-pub const GRAVITY_AMPLIFIER: f32 = 10_000_000_000.0;
-pub const UNIVERSAL_GRAVITY: f32 = 0.000000000066743;
+// Bodies
+pub const BODY_MAX_RADIUS: f64 = 1.0;
+pub const BODY_MAX_ANG_VEL: f64 = 0.5 * (2.0 * std::f64::consts::PI);
+pub const BODY_MAX_LIN_VEL: f64 = 1.7;
+pub const BODY_RESTITUTION: f32 = 0.8;
+pub const BODY_FRICTION: f32 = 0.2;
 
 pub struct Simulation {
     pub state: State,
     pub physics_context: PhysicsContext,
 }
 
+impl Default for Simulation {
+    fn default() -> Self {
+        Simulation::new(50)
+    }
+}
+
 impl Simulation {
     pub fn new(num_bodies: usize) -> Self {
         // Generate a bunch of bodies
-        let radius_max = 1.0;
-        let angvel_max = 0.1 * (2.0 * std::f64::consts::PI);
-        let linvel_max = 2.0;
         let rngify = |x| (js_sys::Math::random() * x) as f32;
 
         let mut physics_context = PhysicsContext::new();
         for _ in 0..num_bodies {
             // Calculate radius
             let rotation = rngify(2.0 * std::f64::consts::PI);
-            let radius = rngify(radius_max);
+            let radius = rngify(BODY_MAX_RADIUS);
 
             // Calculate initial world position as polar coordinates
             let r = WORLD_RADIUS * rngify(1.0).sqrt() - radius;
@@ -45,12 +56,12 @@ impl Simulation {
 
             // Calculate initial velocity
             let linvel_theta = rngify(2.0 * std::f64::consts::PI);
-            let magnitude = rngify(linvel_max);
+            let magnitude = rngify(BODY_MAX_LIN_VEL);
             let linvel =
                 Mat3::from_rotation_z(linvel_theta) * Vec3::X.mul(magnitude);
 
             // Calculate initial angular velocity
-            let angvel = rngify(angvel_max);
+            let angvel = rngify(BODY_MAX_ANG_VEL);
 
             // Bodies
             let rigid_body = RigidBodyBuilder::new(RigidBodyType::Dynamic)
@@ -61,8 +72,8 @@ impl Simulation {
                 .rotation(rotation)
                 .build();
             let collider = ColliderBuilder::ball(radius)
-                .restitution(RESTITUTION)
-                .friction(FRICTION)
+                .restitution(BODY_RESTITUTION)
+                .friction(BODY_FRICTION)
                 .build();
             physics_context.create_body(rigid_body, collider);
         }
