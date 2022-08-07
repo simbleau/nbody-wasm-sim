@@ -4,15 +4,66 @@
 <head>
     <meta charset="utf-8">
     <title>N-Body WASM Simulation</title>
+    <style>
+        html {
+            min-height: 100%;
+            position: relative;
+        }
+
+        body {
+            height: 100%;
+            color: white;
+            background-color: blue;
+            padding: 0;
+            margin: 0;
+        }
+
+        #f {
+            float: left;
+            margin-left: 10px;
+            position: absolute;
+        }
+
+        #container {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            overflow: hidden;
+        }
+
+        #c {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        #e {
+            position: absolute;
+            margin-left: 10px;
+            bottom: 0;
+            left: 0;
+        }
+
+        #l {
+            overflow: hidden;
+            line-height: 1em;
+            height: 5em;
+        }
+    </style>
 </head>
 
 <body>
-    <h2 id="f">FPS: 0</h2>
-    <canvas id="c" style="background-color: blue;" width="600" height="400"></canvas>
-    <h2>Event Log</h2>
-    <ul id="l">
-        ...
-    </ul>
+    <div id="container">
+        <h2 id="f">FPS: --</h2>
+        <canvas id="c"></canvas>
+        <div id="e">
+            <h2>Event Log</h2>
+            <ul id="l">
+                ...
+            </ul>
+        </div>
+    </div>
 </body>
 
 </html>

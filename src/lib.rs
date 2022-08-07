@@ -6,7 +6,7 @@ mod sim;
 use gloo_console::log;
 use render::WgpuContext;
 use wasm_bindgen::prelude::*;
-use winit::dpi::LogicalSize;
+use winit::dpi::{LogicalSize, PhysicalSize};
 use winit::platform::web::WindowBuilderExtWebSys;
 use winit::{event_loop::EventLoop, window::WindowBuilder};
 
@@ -20,8 +20,7 @@ pub async fn run() {
 
     let dom = Dom::new();
     let canvas = dom::get_canvas();
-    canvas.set_width(600);
-    canvas.set_height(400);
+    let (width, height) = (canvas.client_width(), canvas.client_height());
     log!("Acquired DOM elements");
 
     // Connect graphics card to window
@@ -34,8 +33,9 @@ pub async fn run() {
         .with_canvas(Some(canvas))
         .build(&event_loop)
         .and_then(|w| {
-            // Set attributes
-            w.set_inner_size(LogicalSize::new(600.0, 400.0));
+            // Set initial view port -- ** This isn't what we want! **
+            // We want the canvas to always fit to the document.
+            w.set_inner_size(LogicalSize::new(width, height));
             Ok(w)
         })
         .expect("Could not build window");
