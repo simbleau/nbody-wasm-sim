@@ -23,7 +23,11 @@ This repository is a 2D N-body simulation of a dynamical system of bodies, under
 ---
 
 # 🚀 Serve Locally
-- Install [Trunk](https://trunkrs.dev/)
+## Dependencies
+- [Rust](https://www.rust-lang.org/)
+- [trunk](https://trunkrs.dev/) (`cargo install trunk`)
+- [wasm32-unkown-unknown](https://yew.rs/docs/getting-started/introduction#install-webassembly-target) (`rustup target add wasm32-unknown-unknown`)
+## Serve
 - Run: `trunk serve`
 - Preview: [`http://localhost:8080/`](http://localhost:8080/)
 
