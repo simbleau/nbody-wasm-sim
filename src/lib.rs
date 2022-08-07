@@ -6,7 +6,7 @@ mod sim;
 use gloo_console::log;
 use render::WgpuContext;
 use wasm_bindgen::prelude::*;
-use winit::dpi::{LogicalSize, PhysicalSize};
+use winit::dpi::LogicalSize;
 use winit::platform::web::WindowBuilderExtWebSys;
 use winit::{event_loop::EventLoop, window::WindowBuilder};
 
@@ -64,8 +64,8 @@ pub async fn run() {
 
     // Load textures
     context
-        .add_texture("cookie", include_bytes!("../assets/textures/cookie.png"));
-    context.add_texture("moon", include_bytes!("../assets/textures/moon.jpg"));
+        .add_texture("disco", include_bytes!("../assets/textures/disco.jpg"));
+    context.add_texture("rust", include_bytes!("../assets/textures/rust.png"));
     log!("Loaded textures");
 
     // Run program

@@ -10,8 +10,8 @@ use crate::{
 pub struct WorldUniform {
     pub radius: f32,
     pub boundary_segments: u32,
-    pub rave_mode: bool,
-    _padding: [f32; 1],
+    pub rave_mode: u32,
+    _padding: u32,
 }
 
 impl From<bool> for WorldUniform {
@@ -19,8 +19,8 @@ impl From<bool> for WorldUniform {
         Self {
             radius: WORLD_RADIUS,
             boundary_segments: WORLD_EDGE_SEGMENTS,
-            rave_mode: rave,
-            _padding: [f32::default()],
+            rave_mode: rave as u32,
+            _padding: 0_u32,
         }
     }
 }
@@ -41,12 +41,12 @@ impl GpuUniform for WorldUniform {
     }
 }
 
-fn get_world_buffer_contents(rave: bool) -> Vec<u8> {
+fn get_world_buffer_contents(rave: u32) -> Vec<u8> {
     let uniform = WorldUniform {
         radius: WORLD_RADIUS,
         boundary_segments: WORLD_EDGE_SEGMENTS,
         rave_mode: rave,
-        _padding: [0.0],
+        _padding: 0_u32,
     };
     bytemuck::cast_slice(&[uniform]).to_vec()
 }

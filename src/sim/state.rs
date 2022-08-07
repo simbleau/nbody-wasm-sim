@@ -29,7 +29,7 @@ impl Default for State {
             wireframe: false,
             paused: false,
             bg_color: DVec3::default(),
-            texture_key: "moon".to_owned(),
+            texture_key: "rust".to_owned(),
             rave: false,
             pan: Vec2::ZERO,
             pan_velocity: Vec2::ZERO,
