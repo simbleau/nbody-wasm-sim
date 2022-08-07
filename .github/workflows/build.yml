@@ -10,7 +10,7 @@ env:
   TOOLCHAIN: nightly
 
 jobs:
-  release:
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
