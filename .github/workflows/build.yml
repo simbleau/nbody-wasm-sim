@@ -38,7 +38,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ./dist
-          key: dist-${{ hashFiles('./src') }}-${{ hashFiles('./assets') }}-${{ hashFiles('./index.html') }}
+          key: build-${{ hashFiles('./src') }}-${{ hashFiles('./assets') }}-${{ hashFiles('./index.html') }}
 
       # Install cargo deps
       - name: Trunk build
