@@ -73,13 +73,11 @@ fn vs_main(
     }
 
     var tint: vec3<f32> = vec3<f32>(1.0);
-    var twinkle: vec3<f32> = vec3<f32>(1.0);
     if (world.rave > 0u) {
         tint = vec3<f32>(abs(world_vert.xyz) % 2.0);
-        twinkle = vec3<f32>(instance.model_matrix_0.x);
     }
 
     // Calculate color
-    out.color = star_color * tint * twinkle;
+    out.color = star_color * tint;
     return out;
 }
