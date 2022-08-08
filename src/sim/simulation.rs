@@ -10,8 +10,8 @@ use crate::sim::State;
 
 // Universe
 pub const UNIVERSAL_GRAVITY: f32 = 0.000000000066743;
-pub const GRAVITY_AMPLIFIER: f32 = 5_000_000_000.0;
-pub const WORLD_RADIUS: f32 = 50.0;
+pub const GRAVITY_AMPLIFIER: f32 = 7_000_000_000.0;
+pub const WORLD_RADIUS: f32 = 100.0;
 pub const WORLD_EDGE_SEGMENTS: u32 = 500;
 
 // Camera
@@ -22,10 +22,10 @@ pub const DAMPENING: f32 = 0.05;
 
 // Bodies
 pub const BODY_MAX_RADIUS: f64 = 1.0;
-pub const BODY_MAX_ANG_VEL: f64 = 0.5 * (2.0 * std::f64::consts::PI);
-pub const BODY_MAX_LIN_VEL: f64 = 1.7;
-pub const BODY_RESTITUTION: f32 = 0.8;
-pub const BODY_FRICTION: f32 = 0.2;
+pub const BODY_MAX_ANG_VEL: f64 = 0.2 * (2.0 * std::f64::consts::PI);
+pub const BODY_MAX_LIN_VEL: f64 = 1.4;
+pub const BODY_RESTITUTION: f32 = 0.6;
+pub const BODY_FRICTION: f32 = 0.9;
 
 pub struct Simulation {
     pub state: State,
@@ -34,7 +34,7 @@ pub struct Simulation {
 
 impl Default for Simulation {
     fn default() -> Self {
-        Simulation::new(50)
+        Simulation::new(100)
     }
 }
 
@@ -68,8 +68,8 @@ impl Simulation {
                 .translation(vector![position.x, position.y])
                 .linvel(vector![linvel.x, linvel.y])
                 .angvel(angvel)
-                .ccd_enabled(true)
                 .rotation(rotation)
+                .ccd_enabled(false) // Enable for higher accuracy
                 .build();
             let collider = ColliderBuilder::ball(radius)
                 .restitution(BODY_RESTITUTION)
