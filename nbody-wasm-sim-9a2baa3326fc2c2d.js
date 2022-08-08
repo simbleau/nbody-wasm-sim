@@ -1573,7 +1573,7 @@ function initSync(bytes) {
 
 async function init(input) {
     if (typeof input === 'undefined') {
-        input = new URL('nbody-wasm-sim-eda8928f35adf70b_bg.wasm', import.meta.url);
+        input = new URL('nbody-wasm-sim-9a2baa3326fc2c2d_bg.wasm', import.meta.url);
     }
     const imports = getImports();
 
