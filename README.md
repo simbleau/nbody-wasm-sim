@@ -11,6 +11,8 @@
 
 <h2>Click <a href="https://simbleau.github.io/nbody-wasm-sim">here</a> to demo the simulation.</h2>
 
+<img src="demo.gif" width="300px" height="300px"/>
+
 </div>
 
 ---
