@@ -57,17 +57,14 @@ impl PhysicsContext {
             let mut force = Vec2::ZERO;
             for other in &self.bodies {
                 if body != other {
-                    let sqr_dist = (other.position(self) - body.position(self))
-                        .length_squared();
-                    let force_dir = (other.position(self)
-                        - body.position(self))
-                    .normalize();
-                    force += force_dir
+                    let dir = other.position(self) - body.position(self);
+                    let sqr_dist = dir.length_squared();
+                    force += dir
                         * UNIVERSAL_GRAVITY
                         * GRAVITY_AMPLIFIER
                         * body.mass(self)
                         * other.mass(self)
-                        / sqr_dist;
+                        / (sqr_dist * sqr_dist.sqrt());
                 }
             }
 
