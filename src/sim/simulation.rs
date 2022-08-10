@@ -10,8 +10,8 @@ use crate::sim::State;
 
 // Universe
 pub const UNIVERSAL_GRAVITY: f32 = 0.000000000066743;
-pub const GRAVITY_AMPLIFIER: f32 = 10_000_000_000.0;
-pub const WORLD_RADIUS: f32 = 100.0;
+pub const GRAVITY_AMPLIFIER: f32 = 40_000_000_000.0;
+pub const WORLD_RADIUS: f32 = 75.0;
 pub const WORLD_EDGE_SEGMENTS: u32 = 500;
 
 // Camera
@@ -21,9 +21,10 @@ pub const CAM_PAN_SPEED: f32 = 400.0;
 pub const DAMPENING: f32 = 0.05;
 
 // Bodies
+pub const DEFAULT_NUM_BODIES: usize = 100;
 pub const BODY_MAX_RADIUS: f64 = 1.0;
 pub const BODY_MAX_ANG_VEL: f64 = 0.2 * (2.0 * std::f64::consts::PI);
-pub const BODY_MAX_LIN_VEL: f64 = 2.0;
+pub const BODY_MAX_LIN_VEL: f64 = 3.0;
 pub const BODY_RESTITUTION: f32 = 0.6;
 pub const BODY_FRICTION: f32 = 0.9;
 
@@ -34,7 +35,7 @@ pub struct Simulation {
 
 impl Default for Simulation {
     fn default() -> Self {
-        Simulation::new(100)
+        Simulation::new(DEFAULT_NUM_BODIES)
     }
 }
 
@@ -47,7 +48,7 @@ impl Simulation {
         for _ in 0..num_bodies {
             // Calculate radius
             let rotation = rngify(2.0 * std::f64::consts::PI);
-            let radius = rngify(BODY_MAX_RADIUS);
+            let radius = rngify(BODY_MAX_RADIUS.sqrt());
 
             // Calculate initial world position as polar coordinates
             let r = WORLD_RADIUS * rngify(1.0).sqrt() - radius;
@@ -102,6 +103,7 @@ impl Simulation {
         // Update last frame, get delta time
         let now = Instant::now();
         let dt = (now - self.state.last_frame.unwrap_or(now)).as_secs_f32();
+        gloo_console::log!("frame-time: ", dt);
         self.state.last_frame.replace(now);
 
         // Control camera
