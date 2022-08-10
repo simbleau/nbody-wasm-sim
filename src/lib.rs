@@ -32,11 +32,11 @@ pub async fn run() {
     let window = WindowBuilder::new()
         .with_canvas(Some(canvas))
         .build(&event_loop)
-        .and_then(|w| {
+        .map(|w| {
             // Set initial view port -- ** This isn't what we want! **
             // We want the canvas to always fit to the document.
             w.set_inner_size(LogicalSize::new(width, height));
-            Ok(w)
+            w
         })
         .expect("Could not build window");
     log!("Created window");

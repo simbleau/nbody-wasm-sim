@@ -23,16 +23,15 @@ pub struct FrameDescriptor {
 impl FrameDescriptor {
     pub fn build(sim: &Simulation) -> FrameDescriptor {
         let mut transforms = Vec::new();
-        let ctx = &sim.physics_context;
-        for body in &ctx.bodies {
+        for body in &sim.physics_context.bodies.particles {
             transforms.push(GpuTransform {
                 model: Mat4::from_scale_rotation_translation(
-                    Vec2::splat(2.0 * body.radius(ctx)).extend(1.0),
-                    Quat::from_rotation_z(body.rotation(ctx)),
-                    body.position(ctx).extend(1.0),
+                    Vec2::splat(2.0 * body.radius()).extend(1.0),
+                    Quat::from_rotation_z(body.rotation()),
+                    body.position().extend(1.0),
                 )
                 .to_cols_array_2d(),
-                radius: body.radius(ctx),
+                radius: body.radius(),
             })
         }
 
@@ -90,8 +89,7 @@ impl FrameDescriptor {
         let instance_data = self
             .transforms
             .iter()
-            .map(GpuTransform::data)
-            .flatten()
+            .flat_map(GpuTransform::data)
             .collect::<Vec<_>>();
 
         device.create_buffer_init(&wgpu::util::BufferInitDescriptor {

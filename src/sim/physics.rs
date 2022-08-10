@@ -1,10 +1,12 @@
-use glam::Vec2;
 use rapier2d::prelude::*;
 
-use super::{Body, GRAVITY_AMPLIFIER, UNIVERSAL_GRAVITY};
+use super::{
+    body::{Body, RigidBodies},
+    particle::ParticleSet,
+};
 
 pub struct PhysicsContext {
-    pub bodies: Vec<Body>,
+    pub bodies: ParticleSet<Body>,
     pub integration_parameters: IntegrationParameters,
     pub physics_pipeline: PhysicsPipeline,
     pub island_manager: IslandManager,
@@ -18,7 +20,7 @@ pub struct PhysicsContext {
 impl PhysicsContext {
     pub fn new() -> Self {
         Self {
-            bodies: Vec::new(),
+            bodies: ParticleSet::new(),
             integration_parameters: IntegrationParameters::default(),
             physics_pipeline: PhysicsPipeline::new(),
             island_manager: IslandManager::new(),
@@ -41,39 +43,15 @@ impl PhysicsContext {
             rigid_body_handle,
             &mut self.rigid_body_set,
         );
-        let body = Body {
-            rigid_body_handle,
-            collider_handle,
-        };
-        self.bodies.push(body);
+
+        let particle = Body::new(rigid_body_handle, collider_handle);
+
+        self.bodies.particles.push(particle);
     }
 
     pub fn step(&mut self) {
-        // Calculate velocity vectors
-        let num_bodies = self.bodies.len();
-        for i in 0..num_bodies {
-            // Get displacement
-            let body = &self.bodies[i];
-            let mut force = Vec2::ZERO;
-            for other in &self.bodies {
-                if body != other {
-                    let dir = other.position(self) - body.position(self);
-                    let sqr_dist = dir.length_squared();
-                    force += dir
-                        * UNIVERSAL_GRAVITY
-                        * GRAVITY_AMPLIFIER
-                        * body.mass(self)
-                        * other.mass(self)
-                        / (sqr_dist * sqr_dist.sqrt());
-                }
-            }
-
-            // Apply gravity
-            let rigid_body =
-                self.rigid_body_set.get_mut(body.rigid_body_handle).unwrap();
-            rigid_body.reset_forces(true);
-            rigid_body.add_force(vector![force.x, force.y], true);
-        }
+        self.bodies
+            .update(&mut self.rigid_body_set, &self.collider_set);
 
         self.physics_pipeline.step(
             &vector![0.0, 0.0],

@@ -31,11 +31,11 @@ wgpu = { version = "0.13.1", features = ["webgl"] } # TODO: Years in the future 
 glam = "0.21.3"
 bytemuck = { version = "1.11.0", features = [ "derive" ] }
 js-sys = "0.3.59"
-nalgebra = "0.31.1"
+nalgebra = { version = "0.31.1" , features = ["convert-glam021"] }
 
 [dependencies.rapier2d]
 version = "0.14.0"
-features = [ "wasm-bindgen" ]
+features = [ "wasm-bindgen"]
 
 [dependencies.web-sys]
 version = "0.3.59"

@@ -219,7 +219,8 @@ impl WgpuContext {
 
         // Submit queue
         self.queue.submit(std::iter::once(encoder.finish()));
-        Ok(output.present())
+        output.present();
+        Ok(())
     }
 
     pub fn add_shader(&mut self, name: &'static str, source: &'static str) {
@@ -264,7 +265,7 @@ impl WgpuContext {
     pub fn get_shader(&self, name: &'static str) -> &ShaderModule {
         self.shaders
             .get(name)
-            .expect(&format!("No shader with name '{}'", name))
+            .unwrap_or_else(|| panic!("No shader with name '{}'", name))
     }
 
     pub fn get_texture<'a>(
@@ -273,6 +274,6 @@ impl WgpuContext {
     ) -> &(Texture, BindGroup, BindGroupLayout) {
         self.textures
             .get(name)
-            .expect(&format!("No texture with name '{}'", name))
+            .unwrap_or_else(|| panic!("No texture with name '{}'", name))
     }
 }
