@@ -1,12 +1,9 @@
 use rapier2d::prelude::*;
 
-use super::{
-    body::{Body, RigidBodies},
-    particle::ParticleSet,
-};
+use super::body::{Body, BodySet};
 
 pub struct PhysicsContext {
-    pub bodies: ParticleSet<Body>,
+    pub bodies: BodySet,
     pub integration_parameters: IntegrationParameters,
     pub physics_pipeline: PhysicsPipeline,
     pub island_manager: IslandManager,
@@ -20,7 +17,7 @@ pub struct PhysicsContext {
 impl PhysicsContext {
     pub fn new() -> Self {
         Self {
-            bodies: ParticleSet::new(),
+            bodies: BodySet::new(),
             integration_parameters: IntegrationParameters::default(),
             physics_pipeline: PhysicsPipeline::new(),
             island_manager: IslandManager::new(),
@@ -44,28 +41,42 @@ impl PhysicsContext {
             &mut self.rigid_body_set,
         );
 
-        let particle = Body::new(rigid_body_handle, collider_handle);
+        let mut particle = Body::new(rigid_body_handle, collider_handle);
+        particle.sync_to_rigidbody(&self.rigid_body_set, &self.collider_set);
 
         self.bodies.particles.push(particle);
     }
 
     pub fn step(&mut self) {
-        self.bodies
-            .update(&mut self.rigid_body_set, &self.collider_set);
+        self.bodies.response(|mut result| {
+            for (particle, acceleration) in &result {
+                particle.apply_force_to_rigidbody(
+                    &mut self.rigid_body_set,
+                    *acceleration * particle.mass(),
+                )
+            }
 
-        self.physics_pipeline.step(
-            &vector![0.0, 0.0],
-            &self.integration_parameters,
-            &mut self.island_manager,
-            &mut self.broad_phase,
-            &mut self.narrow_phase,
-            &mut self.rigid_body_set,
-            &mut self.collider_set,
-            &mut ImpulseJointSet::new(),
-            &mut MultibodyJointSet::new(),
-            &mut self.ccd_solver,
-            &(),
-            &(),
-        );
+            self.physics_pipeline.step(
+                &vector![0.0, 0.0],
+                &self.integration_parameters,
+                &mut self.island_manager,
+                &mut self.broad_phase,
+                &mut self.narrow_phase,
+                &mut self.rigid_body_set,
+                &mut self.collider_set,
+                &mut ImpulseJointSet::new(),
+                &mut MultibodyJointSet::new(),
+                &mut self.ccd_solver,
+                &(),
+                &(),
+            );
+
+            for (particle, _) in &mut result {
+                particle.sync_to_rigidbody(
+                    &self.rigid_body_set,
+                    &self.collider_set,
+                );
+            }
+        });
     }
 }

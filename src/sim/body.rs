@@ -3,7 +3,53 @@ use rapier2d::prelude::*;
 
 use crate::sim::{GRAVITY_AMPLIFIER, UNIVERSAL_GRAVITY};
 
-use super::particle::{AsParticle, Particle, ParticleSet};
+pub struct BodySet {
+    pub particles: Vec<Body>,
+}
+
+impl BodySet {
+    pub fn new() -> Self {
+        Self {
+            particles: Vec::new(),
+        }
+    }
+}
+
+impl BodySet {
+    pub fn get_accelerations(&self) -> Vec<Vec2> {
+        let accelerations = self.particles.iter().map(|particle1| {
+            self.particles
+                .iter()
+                .fold(Vec2::ZERO, |acceleration, particle2| {
+                    let dir = particle2.position() - particle1.position();
+                    let mag_2 = dir.length_squared();
+
+                    let grav_acc = if mag_2 != 0.0 {
+                        UNIVERSAL_GRAVITY
+                            * GRAVITY_AMPLIFIER
+                            * particle2.mass()
+                            * dir
+                            / (mag_2 * mag_2.sqrt())
+                    } else {
+                        dir
+                    };
+
+                    acceleration + grav_acc
+                })
+        });
+
+        accelerations.collect()
+    }
+
+    /// Used to define the behaviour of the particles using their computed gravitational acceleration.
+    pub fn response<F>(&mut self, response: F)
+    where
+        F: FnOnce(Vec<(&mut Body, Vec2)>),
+    {
+        let accelerations = self.get_accelerations();
+        response(self.particles.iter_mut().zip(accelerations).collect());
+    }
+}
 
 #[derive(Default)]
 pub struct Body {
@@ -28,15 +74,6 @@ impl Body {
     }
 }
 
-impl AsParticle for Body {
-    fn as_particle(&self) -> Particle {
-        Particle::new(
-            self.position(),
-            self.mass() * UNIVERSAL_GRAVITY * GRAVITY_AMPLIFIER,
-        )
-    }
-}
-
 impl Body {
     pub fn position(&self) -> Vec2 {
         self.position
@@ -54,7 +91,7 @@ impl Body {
         self.mass
     }
 
-    fn sync_to_rigidbody(
+    pub fn sync_to_rigidbody(
         &mut self,
         bodies: &RigidBodySet,
         colliders: &ColliderSet,
@@ -68,7 +105,7 @@ impl Body {
         self.mass = rb.mass();
     }
 
-    fn apply_force_to_rigidbodies(
+    pub fn apply_force_to_rigidbody(
         &self,
         bodies: &mut RigidBodySet,
         force: Vec2,
@@ -77,28 +114,5 @@ impl Body {
 
         rb.reset_forces(true);
         rb.add_force(force.into(), true);
-    }
-}
-
-pub trait RigidBodies {
-    fn update(&mut self, bodies: &mut RigidBodySet, colliders: &ColliderSet);
-}
-
-impl RigidBodies for ParticleSet<Body> {
-    fn update(&mut self, bodies: &mut RigidBodySet, colliders: &ColliderSet) {
-        // First we sync each gravitational body to its corresponding rigidbody and collider
-        for particle in &mut self.particles {
-            particle.sync_to_rigidbody(bodies, colliders);
-        }
-
-        // Then we can calculate and apply the force
-        for (particle, acceleration) in
-            self.particles.iter().zip(self.get_accelerations())
-        {
-            particle.apply_force_to_rigidbodies(
-                bodies,
-                acceleration * particle.mass(),
-            )
-        }
     }
 }
