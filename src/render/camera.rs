@@ -45,6 +45,6 @@ impl Camera {
             1.0,
         );
 
-        return proj * view.inverse();
+        proj * view.inverse()
     }
 }

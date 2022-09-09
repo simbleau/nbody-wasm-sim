@@ -14,12 +14,12 @@ pub(crate) fn get(
             label: Some("Solid Pipeline"),
             layout: Some(&layout),
             vertex: wgpu::VertexState {
-                module: &vert_shader,
+                module: vert_shader,
                 entry_point: "vs_main",
                 buffers: &[GpuQuad::desc(), GpuTransform::desc()],
             },
             fragment: Some(wgpu::FragmentState {
-                module: &frag_shader,
+                module: frag_shader,
                 entry_point: "fs_main",
                 targets: &[Some(wgpu::ColorTargetState {
                     format: context.config.format,
