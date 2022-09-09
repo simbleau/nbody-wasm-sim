@@ -1,55 +1,8 @@
-use glam::Vec2;
+use glam::{Vec2, Vec3};
+use particular::prelude::Particle;
 use rapier2d::prelude::*;
 
 use crate::sim::{GRAVITY_AMPLIFIER, UNIVERSAL_GRAVITY};
-
-pub struct BodySet {
-    pub particles: Vec<Body>,
-}
-
-impl BodySet {
-    pub fn new() -> Self {
-        Self {
-            particles: Vec::new(),
-        }
-    }
-}
-
-impl BodySet {
-    pub fn get_accelerations(&self) -> Vec<Vec2> {
-        let accelerations = self.particles.iter().map(|particle1| {
-            self.particles
-                .iter()
-                .fold(Vec2::ZERO, |acceleration, particle2| {
-                    let dir = particle2.position() - particle1.position();
-                    let mag_2 = dir.length_squared();
-
-                    let grav_acc = if mag_2 != 0.0 {
-                        UNIVERSAL_GRAVITY
-                            * GRAVITY_AMPLIFIER
-                            * particle2.mass()
-                            * dir
-                            / (mag_2 * mag_2.sqrt())
-                    } else {
-                        dir
-                    };
-
-                    acceleration + grav_acc
-                })
-        });
-
-        accelerations.collect()
-    }
-
-    /// Used to define the behaviour of the particles using their computed gravitational acceleration.
-    pub fn response<F>(&mut self, response: F)
-    where
-        F: FnOnce(Vec<(&mut Body, Vec2)>),
-    {
-        let accelerations = self.get_accelerations();
-        response(self.particles.iter_mut().zip(accelerations).collect());
-    }
-}
 
 #[derive(Default)]
 pub struct Body {
@@ -59,6 +12,16 @@ pub struct Body {
     mass: f32,
     pub rigidbody_handle: RigidBodyHandle,
     pub collider_handle: ColliderHandle,
+}
+
+impl Particle for Body {
+    fn position(&self) -> Vec3 {
+        self.position.extend(0.0)
+    }
+
+    fn mu(&self) -> f32 {
+        self.mass * GRAVITY_AMPLIFIER * UNIVERSAL_GRAVITY
+    }
 }
 
 impl Body {
@@ -105,12 +68,13 @@ impl Body {
         self.mass = rb.mass();
     }
 
-    pub fn apply_force_to_rigidbody(
+    pub fn apply_acceleration_to_rigidbody(
         &self,
         bodies: &mut RigidBodySet,
-        force: Vec2,
+        acceleration: Vec2,
     ) {
         let rb = bodies.get_mut(self.rigidbody_handle).unwrap();
+        let force = acceleration * self.mass();
 
         rb.reset_forces(true);
         rb.add_force(force.into(), true);

@@ -32,6 +32,7 @@ glam = "0.21.3"
 bytemuck = { version = "1.11.0", features = [ "derive" ] }
 js-sys = "0.3.59"
 nalgebra = { version = "0.31.1" , features = ["convert-glam021"] }
+particular = "0.1.6"
 
 [dependencies.rapier2d]
 version = "0.14.0"
