@@ -1,4 +1,4 @@
-use glam::{Vec2, Vec3};
+use glam::Vec2;
 use particular::prelude::Particle;
 use rapier2d::prelude::*;
 
@@ -15,8 +15,10 @@ pub struct Body {
 }
 
 impl Particle for Body {
-    fn position(&self) -> Vec3 {
-        self.position.extend(0.0)
+    type Vector = Vec2;
+
+    fn position(&self) -> Vec2 {
+        self.position
     }
 
     fn mu(&self) -> f32 {
@@ -71,7 +73,7 @@ impl Body {
     pub fn apply_acceleration_to_rigidbody(
         &self,
         bodies: &mut RigidBodySet,
-        acceleration: Vec2,
+        acceleration: <Self as Particle>::Vector,
     ) {
         let rb = bodies.get_mut(self.rigidbody_handle).unwrap();
         let force = acceleration * self.mass();

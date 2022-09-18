@@ -52,7 +52,7 @@ impl PhysicsContext {
         for (body, acceleration) in self.bodies.result() {
             body.apply_acceleration_to_rigidbody(
                 &mut self.rigid_body_set,
-                acceleration.truncate(),
+                acceleration,
             )
         }
 
