@@ -49,6 +49,6 @@ features = [
 ]
 
 [dependencies.image]
-version = "0.24.3"
+version = "0.24.4"
 default-features = false
 features = ["png", "jpeg"]
