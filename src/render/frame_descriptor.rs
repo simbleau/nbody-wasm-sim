@@ -23,7 +23,7 @@ pub struct FrameDescriptor {
 impl FrameDescriptor {
     pub fn build(sim: &Simulation) -> FrameDescriptor {
         let mut transforms = Vec::new();
-        for body in &sim.physics_context.bodies.particles {
+        for body in sim.physics_context.bodies.iter() {
             transforms.push(GpuTransform {
                 model: Mat4::from_scale_rotation_translation(
                     Vec2::splat(2.0 * body.radius()).extend(1.0),
