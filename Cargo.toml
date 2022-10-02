@@ -36,7 +36,7 @@ particular = "0.2.0"
 
 
 [dependencies.rapier2d]
-version = "0.14.0"
+version = "0.15.0"
 features = [ "wasm-bindgen"]
 
 [dependencies.web-sys]
