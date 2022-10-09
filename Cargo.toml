@@ -31,7 +31,7 @@ wgpu = { version = "0.14.0", features = ["webgl"] } # TODO: Years in the future 
 glam = "0.21.3"
 bytemuck = { version = "1.12.1", features = [ "derive" ] }
 js-sys = "0.3.60"
-nalgebra = { version = "0.31.1", features = ["convert-glam021"] }
+nalgebra = { version = "0.31.2", features = ["convert-glam021"] }
 particular = "0.2.0"
 
 
