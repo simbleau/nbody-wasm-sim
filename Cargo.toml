@@ -29,7 +29,7 @@ gloo-console = "0.2.3"
 instant = "0.1.12"
 wgpu = { version = "0.14.0", features = ["webgl"] } # TODO: Years in the future when wgpu is stable, remove gl
 glam = "0.22.0"
-bytemuck = { version = "1.12.2", features = [ "derive" ] }
+bytemuck = { version = "1.12.3", features = [ "derive" ] }
 js-sys = "0.3.60"
 nalgebra = { version = "0.31.3", features = ["convert-glam021"] }
 particular = "0.3.0"
